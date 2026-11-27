@@ -2,12 +2,25 @@
 
 一個 file 搞掂嘅 WebGL2 presentation engine：每頁一個 full-screen procedural GLSL scene，上面一層 Canvas 2D 畫嘅清晰文字，頁同頁之間用 shader transition 接駁。冇 library、冇 build step、冇 CDN、冇外部字型 / 圖片 / 音檔，`index.html`（約 74 KB）雙擊就開得，丟上 GitHub Pages 就有網址。
 
+**▶ 線上睇：<https://alanlee7219.github.io/cinematic-slides/>**
+
 ![Slides contact sheet](docs/screens/contact-slides.jpg)
 
 ## 點開
 
-- 直接用 Chrome / Safari / Firefox 開 `index.html`，或者開 GitHub Pages。
+- 線上：<https://alanlee7219.github.io/cinematic-slides/>（GitHub Pages）。
+- 本機：直接用 Chrome / Safari / Firefox 開 `index.html`。
 - 要 WebGL2。冇 WebGL2、或者任何 shader compile / link 失敗，就自動轉 2D fallback（純色背景 + 同一套文字 + fade）。
+
+## 更新網站
+
+網站由 `gh-pages` branch 出，內容同 `main` 一樣。改完 push 去 `main` 之後，再行：
+
+```sh
+git push origin main:gh-pages
+```
+
+大約 1 分鐘後網站就會更新。
 
 ## 操作
 
