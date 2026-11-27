@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<title>告別悶 Slide · WebGL deck demo</title>
+<title>Cinematic Slides v2 · WebGL2 deck</title>
 <style>
 :root{--panel:rgba(12,14,20,.92);--text:#eef1f6;--dim:#9aa3b2;--sel:#7cc4ff}
 *{box-sizing:border-box}
@@ -20,10 +20,20 @@ body{color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFan
 #over h2{grid-column:1/-1;margin:0 0 4px;font-size:15px;font-weight:600;color:var(--dim)}
 #over button{all:unset;cursor:pointer;display:grid;gap:8px;padding:10px;border-radius:12px;outline:2px solid transparent;outline-offset:2px}
 #over button:hover,#over button:focus-visible,#over button[aria-current="true"]{outline-color:var(--sel)}
-#over .sw{aspect-ratio:16/9;border-radius:8px}
+#over .sw{aspect-ratio:16/9;border-radius:8px;background:#0b0f18}
 #over .sw.space{background:radial-gradient(circle at 82% 122%,#3b6fe0 0 32%,#16306e 33% 38%,transparent 39%),radial-gradient(circle at 30% 30%,#2a1846,transparent 60%),#070a14}
-#over .sw.aurora{background:linear-gradient(180deg,#07122a 0%,#0b2c3a 55%,#1fd18a 78%,#071a1c 100%)}
+#over .sw.aurora{background:linear-gradient(180deg,#07122a 0%,#0b2c3a 55%,#1fd18a 70%,#050a10 72%,#0a1a22 100%)}
 #over .sw.paper{background:linear-gradient(135deg,#f1ede5,#e2dbcf)}
+#over .sw.mountains{background:radial-gradient(circle at 70% 62%,#ffe2b0 0 4%,transparent 18%),linear-gradient(180deg,#101634 0%,#5a3a5c 45%,#f09a5a 62%,#3a3050 64%,#171528 100%)}
+#over .sw.moon{background:radial-gradient(circle at 76% 58%,#d8d2c6 0 30%,#3a3834 34%,transparent 35%),#04060c}
+#over .sw.city{background:linear-gradient(0deg,#05060c 0 30%,transparent 30%),repeating-linear-gradient(90deg,#0b0c16 0 18px,transparent 18px 26px),linear-gradient(180deg,#050816,#2a1530 80%)}
+#over .sw.ocean{background:linear-gradient(180deg,#151a3a 0%,#5a3550 55%,#ffa858 71%,#123040 72%,#06131c 100%)}
+#over .sw.dunes{background:linear-gradient(180deg,#a8bfdc 0%,#f4e2c6 48%,#e6c18e 50%,#c78b5c 75%,#efcf9c 100%)}
+#over .sw.clouds{background:radial-gradient(ellipse at 50% 90%,#fff 0 30%,transparent 60%),linear-gradient(180deg,#6f97d6,#dce6f2 60%,#f4f6fa)}
+#over .sw.synthwave{background:radial-gradient(circle at 70% 45%,#ffcf4a 0 14%,transparent 15%),linear-gradient(180deg,#0c0420 0%,#3a0a44 50%,#ff5a8a 58%,#12041e 60%,#1a0630 100%)}
+#over .sw.marble{background:radial-gradient(ellipse at 30% 40%,#2a6f7a,transparent 50%),radial-gradient(ellipse at 70% 60%,#b0507a,transparent 45%),#070912}
+#over .sw.terminal{background:repeating-linear-gradient(180deg,rgba(0,0,0,.35) 0 2px,transparent 2px 4px),radial-gradient(ellipse at 50% 50%,#0c2a16,#020804 80%)}
+#over .sw.bokeh{background:radial-gradient(circle at 25% 35%,#ffbf6a 0 7%,transparent 8%),radial-gradient(circle at 68% 60%,#ff6a9a 0 10%,transparent 11%),radial-gradient(circle at 80% 25%,#6ac8ff 0 6%,transparent 7%),#0b0716}
 #over .n{color:var(--dim);font-size:13px;font-variant-numeric:tabular-nums}
 #over .t{font-weight:600;line-height:1.35}
 #help{right:max(20px,env(safe-area-inset-right));bottom:calc(20px + env(safe-area-inset-bottom));padding:16px 20px;border-radius:12px;display:grid;grid-template-columns:auto auto;gap:5px 18px;max-width:calc(100vw - 40px)}
@@ -40,12 +50,14 @@ body{color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFan
 <div id="notes" class="panel" hidden><p id="notesText"></p><span class="meta" id="notesMeta"></span></div>
 <nav id="over" class="panel" hidden aria-label="全部頁面"></nav>
 <div id="help" class="panel" hidden role="dialog" aria-label="操作">
-  <b>→ / Space / 撳右邊</b><span>下一步</span>
-  <b>← / 撳左邊</b><span>上一步</span>
+  <b>→ / Space / Enter / 撳右邊</b><span>下一步</span>
+  <b>← / Backspace / 撳左邊</b><span>上一步</span>
   <b>Swipe</b><span>手機換頁</span>
   <b>N</b><span>Speaker notes</span>
   <b>O</b><span>Overview</span>
   <b>F</b><span>全屏</span>
+  <b>M</b><span>轉場聲效（預設關）</span>
+  <b>? / H</b><span>呢個 help</span>
   <b>Home / End</b><span>第一頁 / 最後一頁</span>
   <b>Esc</b><span>關閉</span>
 </div>
@@ -58,80 +70,146 @@ body{color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI","PingFan
 /* =========================================================
    1. 內容：改 SLIDES 就換到成份 deck
    layout: 'hero' | 'list'
-   bg:     'space' | 'aurora' | 'paper'
-   tr:     去下一頁用嘅 transition：'portal' | 'flaps' | 'dissolve' | 'line' | 'fade'
+   bg:     scene 名（見下面 DARK）
+   tr:     去下一頁用嘅 transition（見下面 TR）
    body:   每粒 bullet 係一步（按一下出一粒）
    ========================================================= */
-const DECK_TITLE = '告別悶 Slide';
+const DECK_TITLE = 'Cinematic Slides v2';
 const SLIDES = [
   { id: 'intro', layout: 'hero', bg: 'space', tr: 'portal', accent: '#7cc4ff',
-    kicker: 'WebGL 簡報 demo', title: '告別悶 Slide',
-    sub: '一個 HTML file，做到電影感轉場。',
-    notes: '呢份 deck 本身就係 demo：全部用原生 WebGL2 同 GLSL shader 即時畫，冇任何外部 library，離線都開到。按 → 或 Space 開始。' },
-  { id: 'what', layout: 'list', bg: 'paper', tr: 'flaps', accent: '#c4471f',
-    kicker: '拆解原版', title: 'The Last Boring Slide 係乜',
+    kicker: 'WebGL2 簡報引擎', title: '一個 HTML，\n十三個世界',
+    sub: '13 個 procedural scene、10 款 shader 轉場，全部喺 GPU 即時計，離線都開到。',
+    notes: '呢份 deck 自己就係說明書：每一頁用一個唔同嘅 scene，頁與頁之間用唔同嘅轉場。冇 library、冇圖片、冇外部字型。按 → 或者 Space 開始。' },
+  { id: 'concept', layout: 'list', bg: 'mountains', tr: 'fold', accent: '#ffb36b',
+    kicker: '設計概念', title: '一頁一個 scene',
     body: [
-      '單一 HTML file：全屏 canvas，加一層 UI（notes、overview、help）',
-      '13 個 scene，大多用 shader 即時計算：山脈、月球、地球、星空',
-      '10 款 transition：摺紙、水浪、翻牌、印刷、撕紙、CRT 收線',
-      'Fonts 同圖片全部 base64 塞入 file，所以離線都開到'
+      '底層：全屏 GLSL scene，負責氣氛同情緒',
+      '面層：Canvas 2D 文字，負責講清楚重點',
+      '中間：shader 轉場，交代頁與頁嘅關係',
+      '克制：一頁一個 idea，最多 5 粒 bullet'
     ],
-    notes: '原版用 three.js 加自寫 GLSL。呢頁只係拆解佢嘅結構；呢份 demo 係重新寫過，冇用原版嘅 code。' },
-  { id: 'stack', layout: 'list', bg: 'aurora', tr: 'dissolve', accent: '#5ef2c1',
-    kicker: '技術棧', title: '四樣嘢砌成一份 deck',
+    notes: '日出山脈係 6 層 ridgeline，越遠越淡（atmospheric perspective），山谷有霧慢慢飄。下一頁用 fold：成頁好似紙咁摺埋飛走。' },
+  { id: 'text', layout: 'list', bg: 'paper', tr: 'tear', accent: '#b8431c',
+    kicker: '文字層', title: '啲字點樣疊上去',
     body: [
-      'WebGL2：所有畫面都喺 GPU 畫',
-      'GLSL shader：背景、轉場、光影全部係 code',
-      'Canvas 2D：先將文字畫好，再變成 texture',
-      'Hash routing：#頁-步，每一步都有自己嘅網址'
+      'Canvas 2D 先畫字，中英混排自動換行',
+      '上載做 premultiplied texture，3 個 slot 輪住用',
+      'Scene shader 最後一步先 composite 文字',
+      'DARK map：深 scene 用白字加陰影，淺 scene 用深字'
     ],
-    notes: '極光背景係三層 noise 疊出嚟，每粒 pixel 每個 frame 都重新計。文字就用 Canvas 2D 先畫，再當 texture 交俾 shader。' },
-  { id: 'how', layout: 'list', bg: 'paper', tr: 'line', accent: '#2f5bd3',
-    kicker: '轉場原理', title: 'Transition 其實係一條公式',
+    notes: '換行規則喺 wrap()：標點唔做行頭、最後一行唔會淨一兩隻字。文字 texture 用 LRU 三格 cache，step 動畫期間先會重畫。下一頁用 tear：撕紙。' },
+  { id: 'noise', layout: 'list', bg: 'moon', tr: 'wash', accent: '#c9d4ff',
+    kicker: 'Scene 原理', title: '冇一張圖，全部係 noise',
     body: [
-      'A 頁同 B 頁各自先畫落一張 offscreen texture',
-      '全屏 shader 同時讀 A 同 B',
-      'Progress p 由 0 行到 1，shader 決定每粒 pixel 幾時由 A 變 B',
-      'p = 1 嗰一刻，正式換頁'
+      'hash → value noise → fbm，最多 5 個 octave',
+      'Domain warp 整流動感：雲、霧、雲石',
+      '月球隕石坑：每格 cell 算一個坑，有 rim 同陰影',
+      '全部 motion 都要細同慢，唔好搶咗啲字'
     ],
-    notes: 'Dissolve 用 noise 決定 pixel 嘅次序；翻牌將畫面切成 tile，逐塊計角度；CRT 收線將畫面壓成一條線，再拉開下一頁。' },
-  { id: 'build', layout: 'list', bg: 'space', tr: 'flaps', accent: '#ffd27a',
-    kicker: '製作步驟', title: '自己整一份，分五步',
+    notes: '月球每個坑都係 3D cell 入面隨機擺一個圓，用 rim 同 bowl 嘅斜度計光暗，所以近 terminator 嗰邊特別立體。下一頁用 wash：水浪掃過。' },
+  { id: 'formula', layout: 'list', bg: 'ocean', tr: 'slam', accent: '#ffc46b',
+    kicker: '轉場原理', title: '轉場其實係一條公式',
     body: [
-      '定內容：題材、6–10 頁、每頁一句重點',
-      '寫 engine：分頁、步驟、鍵盤、swipe、網址',
-      '寫 transition：每款一個 fragment shader',
-      '加 3D scene：例如星空、地球、極光',
-      '打包測試：單一 HTML，喺手機同電腦試 fps'
+      'A、B 兩頁各自畫落 offscreen texture',
+      '全屏 shader 讀 A、B 同 progress p（0 → 1）',
+      'p = 0 一定係 A，p = 1 一定係 B',
+      '返轉頭：A、B 對調，p = 1 − p，倒播都啱'
     ],
-    notes: '第一版先做 2–3 款 transition 加 1 個 scene，其餘頁靠排版。之後逐款 transition 慢慢加，每款都可以獨立調。' },
-  { id: 'controls', layout: 'list', bg: 'aurora', tr: 'portal', accent: '#b59cff',
-    kicker: '操作', title: '點樣用呢份 deck',
+    notes: '海面係簡化 raytrace：每粒 pixel 射一條線落水面，用 5 條 sine wave 計法線，再反射天空同太陽。下一頁用 slam：印刷機蓋印。' },
+  { id: 'paper', layout: 'list', bg: 'city', tr: 'glitch', accent: '#ff7ab0',
+    kicker: '轉場一覽 · 上', title: '紙同水嘅質感',
     body: [
-      '→ / Space / 撳右邊：下一步；← / 撳左邊：上一步',
-      'N：speaker notes；O：overview；F：全屏；?：help',
-      '手機：左右 swipe 換頁',
-      '網址記住你去到邊頁，例如 #how-2'
+      'fold：摺紙，有摺痕高光、紙背纖維同投影',
+      'tear：撕紙，鋸齒邊、白色纖維、兩塊飛開',
+      'wash：水浪掃過，前面折射 A，後面折射 B',
+      'slam：蓋印 overshoot，加油墨網點慢慢散開',
+      'flaps：一格格翻牌，好似機場告示板'
     ],
-    notes: '想預覽某一款 transition，可以喺網址加 ?tr=flaps&p=0.5&a=1&b=2，畫面會停喺第 2 頁去第 3 頁嘅一半。' },
-  { id: 'next', layout: 'hero', bg: 'space', tr: 'fade', accent: '#7cc4ff',
-    kicker: '下一步', title: '揀題材，換內容',
-    sub: '改 index.html 頂部嘅 SLIDES 就換到內容。想要更多轉場，可以再加 fold、wash、tear。',
-    notes: '開咗 GitHub Pages 之後，呢個 file 就有自己嘅網址，可以直接 share。' }
+    notes: '夜景分三層深度，窗口隔一陣自己開關，天上有架飛機閃住燈慢慢飛過。下一頁用 glitch：訊號壞咗，中途切去下一頁。' },
+  { id: 'signal', layout: 'list', bg: 'terminal', tr: 'line', accent: '#7dffa8',
+    kicker: '轉場一覽 · 下', title: '光同訊號',
+    body: [
+      'glitch：block 錯位、RGB split、中途切 B',
+      'line：舊 CRT 熄機，壓成一條線再拉開',
+      'portal：中間開個光圈，舊頁推埋嚟',
+      'dissolve：noise 燒穿，邊緣發光',
+      'fade：最基本，亦係減少動態時嘅後備'
+    ],
+    notes: 'Terminal scene 自己 composite 文字：輕微 barrel curvature、scanline、phosphor glow，但係 curvature 好細，字仍然清楚。' },
+  { id: 'rhythm', layout: 'list', bg: 'aurora', tr: 'dissolve', accent: '#5ef2c1',
+    kicker: '節奏', title: '一步一步講',
+    body: [
+      '每粒 bullet 係一個 step，按一下先出一粒',
+      '網址 #id-step 記住你去到邊，refresh 都唔甩',
+      'Step 出現嗰陣，scene 鏡頭會輕輕推前',
+      'N 睇 speaker notes，O 睇 overview'
+    ],
+    notes: '極光下面加咗山同湖，湖面反射極光。鏡頭推前（uCam）係按 step 進度慢慢 ease，唔會跳。' },
+  { id: 'contrast', layout: 'list', bg: 'dunes', tr: 'flaps', accent: '#9a3b12',
+    kicker: '對比度', title: '淺底深字，深底白字',
+    body: [
+      'DARK map 決定每個 scene 用白字定深字',
+      '文字範圍有柔和 scrim，背景再花都睇得清',
+      'Kicker 用 accent 色：淺 scene 要揀深色',
+      '手機直向 390 × 844 都要逐頁檢查'
+    ],
+    notes: '沙丘係淺色 scene：DARK.dunes = false，所以字係深色，加淺色 halo。地平線附近有熱浪 shimmer。' },
+  { id: 'fallback', layout: 'list', bg: 'clouds', tr: 'fade', accent: '#1f5fbf',
+    kicker: '後備方案', title: '壞咗都要睇得到',
+    body: [
+      '冇 WebGL2 或者 shader 失敗：自動轉 2D 淡入淡出',
+      'prefers-reduced-motion：全部轉場變 0.45 秒 fade',
+      'GPU context 甩咗：恢復之後自動 reload',
+      'Notes 同 overview 係 HTML，screen reader 讀到'
+    ],
+    notes: '雲海係一塊 fbm 平面，向太陽嗰邊計亮邊；近鏡嘅雲絲用兩層 infinite zoom 交替，營造向前飛嘅感覺。' },
+  { id: 'budget', layout: 'list', bg: 'synthwave', tr: 'wash', accent: '#ff5fd2',
+    kicker: '效能預算', title: '60 fps 先叫電影感',
+    body: [
+      '目標：1920 × 1080，普通 laptop iGPU 跑 60 fps',
+      'fbm 最多 5 個 octave，loop 唔超過 48 次',
+      'DPR 上限 2，總像素有 MAX_PIX 上限',
+      '慢機自動降解像度，成個 file 唔超過 250 KB'
+    ],
+    notes: 'Grid 用 fwidth 做 anti-aliasing，越近地平線越淡，避免 moiré。如果連續幾秒 frame time 太長，engine 會自動降少少內部解像度。' },
+  { id: 'extend', layout: 'list', bg: 'marble', tr: 'fold', accent: '#ffd27a',
+    kicker: '擴充', title: '加 scene，加轉場',
+    body: [
+      'Scene：寫 BG_XXX，加入 PROG.bg、DARK 同 BG2D',
+      '轉場：寫 TR_XXX，加入 TR（長度）同 PROG.tr',
+      '?tr=xxx&p=0.5&a=1&b=2：停喺某一格慢慢調',
+      'npm test：截圖、console error、鍵盤行晒全份'
+    ],
+    notes: '雲石係兩層 domain warp：q 推 r，r 推最後嘅 f。三隻 accent 色按唔同 warp 層混入去。' },
+  { id: 'reuse', layout: 'hero', bg: 'bokeh', tr: 'fade', accent: '#ffcf8a',
+    kicker: '輪到你', title: '改 SLIDES，\n變成你嘅 deck',
+    sub: '複製 index.html，改內容、揀 scene 同轉場，跑一次 npm test，就可以 share 一個 file 或者上 GitHub Pages。',
+    notes: '詳細做法睇 README 同 skill/SKILL.md。記住：一頁一個 idea，motion 要有意思。' }
 ];
 
 /* =========================================================
-   2. Transition 長度（秒）。每款對應下面一個 shader。
+   2. Transition 長度（秒）。每款對應下面一個 TR_* shader。
    ========================================================= */
 const TR = {
-  fade:     { dur: 0.7 },
+  fade:     { dur: 1.1 },
   dissolve: { dur: 1.6 },
   flaps:    { dur: 1.9 },
   line:     { dur: 1.3 },
-  portal:   { dur: 1.5 }
+  portal:   { dur: 1.5 },
+  fold:     { dur: 2.1 },
+  wash:     { dur: 1.8 },
+  slam:     { dur: 1.4 },
+  tear:     { dur: 2.0 },
+  glitch:   { dur: 1.1 }
+};
+// 每個 scene 係深底（白字）定淺底（深字）
+const DARK = {
+  space: true, aurora: true, paper: false, mountains: true, moon: true, city: true, ocean: true,
+  dunes: false, clouds: false, synthwave: true, marble: true, terminal: true, bokeh: true
 };
 // 只認自己定義嘅 key（防 ?tr=constructor 之類）
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+
 
 /* =========================================================
    3. Shaders
@@ -154,6 +232,9 @@ uniform float uAsp;
 uniform float uP;
 uniform vec2 uRes;
 uniform vec3 uAccent;
+uniform float uCam;
+uniform float uDark;
+const float PI=3.14159265;
 float hash12(vec2 p){ vec3 p3=fract(vec3(p.xyx)*.1031); p3+=dot(p3,p3.yzx+33.33); return fract((p3.x+p3.y)*p3.z); }
 float hash13(vec3 p3){ p3=fract(p3*.1031); p3+=dot(p3,p3.zyx+31.32); return fract((p3.x+p3.y)*p3.z); }
 float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.-2.*f);
@@ -163,14 +244,38 @@ float vnoise3(vec3 p){ vec3 i=floor(p), f=fract(p); vec3 u=f*f*(3.-2.*f);
   float b=mix(mix(hash13(i+vec3(0.,0.,1.)),hash13(i+vec3(1.,0.,1.)),u.x),mix(hash13(i+vec3(0.,1.,1.)),hash13(i+vec3(1.,1.,1.)),u.x),u.y);
   return mix(a,b,u.z); }
 float fbm(vec2 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*vnoise(p); p=p*2.03+vec2(1.7,9.2); a*=.5; } return s; }
-float fbm3(vec3 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*vnoise3(p); p=p*2.02+vec3(1.7,9.2,3.1); a*=.5; } return s; }
+float fbm3(vec2 p){ float s=0., a=.5; for(int i=0;i<3;i++){ s+=a*vnoise(p); p=p*2.03+vec2(1.7,9.2); a*=.5; } return s*1.143; }
+float fbmv(vec3 p){ float s=0., a=.5; for(int i=0;i<5;i++){ s+=a*vnoise3(p); p=p*2.02+vec3(1.7,9.2,3.1); a*=.5; } return s; }
 float easeIO(float t){ t=clamp(t,0.,1.); return t<.5?4.*t*t*t:1.-pow(-2.*t+2.,3.)*.5; }
+mat2 rot(float a){ float c=cos(a), s=sin(a); return mat2(c,s,-s,c); }
+vec2 scr(){ return (vUv-.5)*vec2(uAsp,1.); }
+// 鏡頭：step reveal 時輕輕推前（uCam 0 → 1）
+vec2 camP(){ return scr()*(1.-.05*uCam)+vec2(.04,.018)*uCam; }
+// 文字大概喺邊：landscape 左邊，portrait 上中段
+float textZone(){
+  if(uAsp>=1.) return (1.-smoothstep(.10,.78,vUv.x))*(.45+.55*smoothstep(.04,.55,vUv.y));
+  return .3+.7*smoothstep(.12,.42,vUv.y)*(1.-smoothstep(.86,1.,vUv.y));
+}
+// film grain + 輕微 vignette
+vec3 post(vec3 c){
+  c=max(c,vec3(0.));
+  vec2 v=vUv-.5; c*=1.-.22*dot(v,v);
+  float g=hash12(floor(vUv*uRes)+fract(uTime*7.31)*173.)-.5;
+  float l=clamp(dot(c,vec3(.3,.55,.15)),0.,1.);
+  return c+g*.03*(.35+.65*sqrt(l));
+}
 `;
 
-// 背景 shader 共用：文字 texture（premultiplied alpha）疊喺背景上面
+// 背景 shader 共用：scrim（保證對比）+ 文字 texture（premultiplied alpha）+ post
 const TEXT = `
 uniform sampler2D tText;
-vec3 withText(vec3 bg){ vec4 t=texture(tText,vUv); return bg*(1.-t.a)+t.rgb; }
+vec3 withText(vec3 bg){
+  bg=max(bg,vec3(0.));
+  float z=textZone();
+  bg=uDark>.5?bg*(1.-.36*z):mix(bg,vec3(1.,.99,.97),.24*z);
+  vec4 t=texture(tText,vUv);
+  return post(bg*(1.-t.a)+t.rgb);
+}
 `;
 
 const STARS = `
@@ -190,7 +295,7 @@ vec3 starLayer(vec2 p,float scale,float seed,float thr){
 // 星空 + 星雲 + 一個會轉嘅地球（夜面有城市燈）
 const BG_SPACE = TEXT + STARS + `
 void main(){
-  vec2 p=(vUv-.5)*vec2(uAsp,1.);
+  vec2 p=camP();
   vec3 col=vec3(.010,.013,.030)+vec3(.015,.025,.055)*(1.-vUv.y);
   float n=fbm(p*1.25+vec2(uTime*.004,0.));
   float n2=fbm(p*2.6-vec2(0.,uTime*.003)+4.);
@@ -206,42 +311,43 @@ void main(){
     float z=sqrt(1.-r2); vec3 nr=vec3(d,z);
     float a=uTime*.02; float ca=cos(a), sa=sin(a);
     vec3 q=vec3(ca*nr.x+sa*nr.z,nr.y,-sa*nr.x+ca*nr.z);
-    float land=smoothstep(.50,.56,fbm3(q*1.7+3.1));
-    float cl=smoothstep(.47,.78,fbm3(q*2.8+vec3(uTime*.006,0.,0.)+9.));
+    float land=smoothstep(.50,.56,fbmv(q*1.7+3.1));
+    float cl=smoothstep(.47,.78,fbmv(q*2.8+vec3(uTime*.006,0.,0.)+9.));
     vec3 landCol=mix(vec3(.09,.13,.07),vec3(.17,.14,.09),vnoise3(q*6.));
     vec3 alb=mix(vec3(.010,.045,.12),landCol,land);
-    float dif=max(dot(nr,L),0.);
+    float ndl=dot(nr,L);
+    float dif=max(ndl,0.);
     vec3 c=alb*(.025+1.35*dif);
     vec3 Hv=normalize(L+vec3(0.,0.,1.));
     c+=vec3(.85,.92,1.)*pow(max(dot(nr,Hv),0.),70.)*(1.-land)*(1.-cl)*.6;
     c=mix(c,vec3(.90,.93,.97)*(.03+1.05*dif),cl*.75);
-    float night=1.-smoothstep(-.10,.10,dot(nr,L));
+    float night=1.-smoothstep(-.10,.10,ndl);
     float cluster=smoothstep(.45,.75,vnoise3(q*14.+2.));
     float city=land*(1.-cl)*night*cluster*smoothstep(.70,.88,vnoise3(q*150.));
     c+=vec3(1.,.62,.26)*city*1.6;
+    c+=vec3(1.,.42,.18)*exp(-abs(ndl)*14.)*.10;
     float rim=pow(1.-z,2.4);
-    c+=vec3(.22,.50,1.)*rim*(.12+.95*smoothstep(-.25,.6,dot(nr,L)));
+    c+=vec3(.22,.50,1.)*rim*(.12+.95*smoothstep(-.25,.6,ndl));
     float aa=1.-smoothstep(.985,1.,r2);
     col=mix(col,c,aa);
   }
   float r=sqrt(r2);
   float side=.30+.70*smoothstep(-.5,.8,dot(d/max(r,1e-4),normalize(L.xy)));
   col+=vec3(.18,.42,1.)*exp(-max(r-1.,0.)*10.)*.55*side*step(.985,r2);
-  vec2 v=vUv-.5; col*=1.-.55*dot(v,v);
+  vec2 v=vUv-.5; col*=1.-.45*dot(v,v);
   o=vec4(withText(col),1.);
 }`;
 
-// 極光：三層 noise 簾幕，下緣利、向上慢慢散
+// 極光：三層 noise 簾幕，下面有山同湖，湖面反射
 const BG_AURORA = TEXT + STARS + `
-void main(){
-  vec2 p=(vUv-.5)*vec2(uAsp,1.);
-  vec3 col=mix(vec3(.006,.012,.030),vec3(.014,.038,.075),vUv.y);
+vec3 auroraSky(vec2 p){
+  vec3 col=mix(vec3(.006,.012,.030),vec3(.014,.038,.075),clamp(p.y+.5,0.,1.));
   col+=starLayer(p,95.,5.,.972)*.7+starLayer(p,175.,9.,.98)*.5;
   float t=uTime*.05;
   for(int i=0;i<3;i++){
     float fi=float(i);
     float w=fbm(vec2(p.x*.85+fi*3.1+t,fi*1.7+t*.4));
-    float yC=-.22+fi*.09+(w-.5)*.55;
+    float yC=-.12+fi*.09+(w-.5)*.55;
     float dy=p.y-yC;
     float streak=.40+.60*vnoise(vec2(p.x*34.+w*14.+fi*10.,t*2.5+fi));
     float I=(dy<0.?exp(-dy*dy*380.):exp(-dy*2.8))*streak;
@@ -249,31 +355,473 @@ void main(){
     ac=mix(ac,uAccent,.22);
     col+=ac*I*(.40-fi*.09);
   }
-  col+=vec3(.04,.18,.14)*exp(-vUv.y*7.)*.4;
-  vec2 v=vUv-.5; col*=1.-.5*dot(v,v);
+  return col;
+}
+void main(){
+  vec2 p=camP();
+  float shore=-.36;
+  float ridge=shore+.035+.10*fbm3(vec2(p.x*1.6+4.,2.))+.025*vnoise(vec2(p.x*9.,5.));
+  vec3 col;
+  if(p.y>=shore){
+    col=auroraSky(p);
+    float m=1.-smoothstep(ridge-1.5/uRes.y,ridge+1.5/uRes.y,p.y);
+    col=mix(col,vec3(.006,.010,.016)+vec3(.01,.04,.03)*exp(-(ridge-p.y)*30.),m);
+  } else {
+    float dd=shore-p.y;
+    vec2 rp=vec2(p.x+.004*sin(p.y*160.+uTime*1.3)*(.3+dd*4.),shore+dd*1.15);
+    float rr=shore+.035+.10*fbm3(vec2(rp.x*1.6+4.,2.))+.025*vnoise(vec2(rp.x*9.,5.));
+    vec3 refl=rp.y<rr?vec3(.006,.010,.016):auroraSky(rp);
+    col=refl*(.55-dd*.6)+vec3(.004,.008,.014);
+    col+=vec3(.5,.9,.8)*exp(-dd*90.)*.03;
+  }
+  col+=vec3(.04,.18,.14)*exp(-vUv.y*7.)*.25;
   col=col/(1.+col*.3);
   o=vec4(withText(col),1.);
 }`;
 
-// 紙：纖維、紙紋、少少光暗
+// 紙：纖維、紙紋、慢慢移動嘅柔光
 const BG_PAPER = TEXT + `
 void main(){
-  vec2 p=(vUv-.5)*vec2(uAsp,1.);
+  vec2 p=camP();
   float f=fbm(p*vec2(9.,7.));
-  float g=vnoise(p*uRes.y*.33)-.5;
+  float g=vnoise(scr()*uRes.y*.33)-.5;
   float m=fbm(p*2.2+5.)-.5;
   vec3 col=vec3(.936,.918,.884)*(1.+(f-.5)*.05+g*.03+m*.04);
-  float fib=smoothstep(.70,.96,vnoise(vec2(p.x*230.+fbm(p*28.)*6.,p.y*17.)));
-  col*=1.-.03*fib;
-  vec2 v=vUv-vec2(.40,.62); col*=1.-.22*dot(v,v);
+  float fib=smoothstep(.70,.96,vnoise(vec2(p.x*230.+fbm3(p*28.)*6.,p.y*17.)));
+  float fib2=smoothstep(.78,.98,vnoise(vec2(p.y*190.+f*5.,p.x*13.)));
+  col*=1.-.03*fib-.02*fib2;
+  vec2 lc=vec2(.40+.06*sin(uTime*.05),.62+.04*cos(uTime*.04));
+  vec2 v=vUv-lc; col*=1.-.24*dot(v,v);
+  col*=1.-.05*smoothstep(.2,1.,vUv.x)*smoothstep(.3,-.6+1.,1.-vUv.y);
+  o=vec4(withText(col),1.);
+}`;
+
+// 日出山脈：6 層 ridgeline，越遠越淡，山谷霧慢慢飄
+const BG_MOUNTAINS = TEXT + `
+void main(){
+  vec2 p=camP(); float t=uTime;
+  vec2 sun=vec2(uAsp>=1.?uAsp*.20:.10,-.02+.012*sin(t*.025));
+  float h=p.y;
+  vec3 sky=mix(vec3(1.,.60,.34),vec3(.36,.24,.38),smoothstep(-.12,.16,h));
+  sky=mix(sky,vec3(.045,.065,.16),smoothstep(.08,.5,h));
+  float sd=length(p-sun);
+  sky+=vec3(1.,.58,.28)*exp(-sd*3.5)*.55+vec3(1.,.85,.6)*exp(-sd*15.)*.55;
+  vec2 sv=(p-sun)/max(sd,1e-4);
+  float rays=vnoise(sv*4.+vec2(t*.015,0.))*vnoise(sv*9.-vec2(0.,t*.01));
+  sky+=vec3(1.,.7,.45)*rays*exp(-sd*2.2)*.22*smoothstep(-.05,.05,h);
+  float cl=fbm(vec2(p.x*1.4+t*.004,p.y*7.));
+  sky=mix(sky,sky*1.06+vec3(.16,.07,.07),smoothstep(.55,.8,cl)*smoothstep(.02,.18,h)*.55);
+  sky+=vec3(1.,.90,.70)*(1.-smoothstep(.060,.068,sd))*1.1;
+  vec3 col=sky;
+  float fogN=fbm(vec2(p.x*1.8-t*.012,p.y*5.+t*.004));
+  float aa=1.5/uRes.y;
+  for(int i=0;i<6;i++){
+    float fi=float(i); float k=fi/5.;
+    float base=-.015-.082*fi;
+    float amp=.05+.05*k;
+    float n=fbm(vec2(p.x*(1.1+fi*.55)+fi*7.3+t*.0015*(1.+fi*1.6),fi*3.1));
+    float y0=base+amp*(n*2.2-.7);
+    float m=1.-smoothstep(y0-aa,y0+aa,p.y);
+    vec3 haze=mix(vec3(.52,.40,.52),vec3(1.,.64,.42),exp(-abs(p.x-sun.x)*1.4));
+    vec3 lc=mix(vec3(.035,.035,.065),haze,(1.-k)*.82);
+    float crest=exp(-max(y0-p.y,0.)*70.)*(1.-k*.55)*exp(-abs(p.x-sun.x)*1.1);
+    lc+=vec3(1.,.6,.35)*crest*.30;
+    lc*=1.-.22*clamp((y0-p.y)*3.,0.,1.);
+    col=mix(col,lc,m);
+    float fy=p.y-(base-amp*.35);
+    float band=exp(-fy*fy*110.);
+    col=mix(col,mix(haze,vec3(.95,.82,.80),.4),band*smoothstep(.35,.75,fogN)*.5*(1.-k*.45));
+  }
+  o=vec4(withText(col),1.);
+}`;
+
+// 月球：隕石坑（rim、bowl 陰影、ejecta rays）、terminator 側光、星空
+const BG_MOON = TEXT + STARS + `
+vec2 crater(vec3 q,float s,float seed,vec3 Lo){
+  vec3 g=q*s; vec3 id=floor(g); vec3 f=fract(g);
+  float h=hash13(id+seed);
+  if(h<.42) return vec2(0.);
+  vec3 c=.5+(vec3(hash13(id+seed+1.7),hash13(id+seed+5.3),hash13(id+seed+9.1))-.5)*.36;
+  float r=.12+.16*hash13(id+seed+3.3);
+  vec3 dv=f-c; dv-=q*dot(dv,q);
+  float l=length(dv); float d=l/r;
+  if(d>1.7) return vec2(0.);
+  vec3 u=dv/max(l,1e-4);
+  float e=d-1.;
+  float rim=exp(-e*e*18.);
+  float dh=(d<1.?2.*d:0.)-12.6*e*rim;
+  float sh=-dh*dot(u,Lo)*.22;
+  float alb=.10*rim-.05*(1.-smoothstep(0.,1.,d));
+  return vec2(sh,alb);
+}
+vec2 bigCrater(vec3 q,vec3 C,float r,vec3 Lo){
+  float cd=clamp(dot(q,C),-1.,1.);
+  vec3 v=q-C*cd; float l=length(v);
+  float d=l/r;
+  vec3 u=v/max(l,1e-4);
+  float e=d-1.; float rim=exp(-e*e*14.);
+  float dh=(d<1.?2.*d:0.)-10.*e*rim;
+  float sh=cd>0.?-dh*dot(u,Lo)*.25*step(d,2.):0.;
+  vec3 T=normalize(cross(C,vec3(.3,1.,.2))); vec3 B=cross(C,T);
+  vec2 a2=vec2(dot(u,T),dot(u,B));
+  float ray=smoothstep(.58,.86,vnoise(a2*7.+C.xy*13.))*smoothstep(.95,1.2,d)*exp(-max(e,0.)*.55);
+  float alb=(.14*rim+.22*ray-.04*(1.-smoothstep(0.,1.,d)))*step(0.,cd);
+  return vec2(sh,alb);
+}
+void main(){
+  vec2 p=camP();
+  vec3 col=vec3(.004,.006,.014)+vec3(.01,.012,.03)*vUv.y;
+  col+=starLayer(p,70.,3.,.968)+starLayer(p,140.,17.,.978)*.7+starLayer(p,240.,29.,.985)*.5;
+  bool port=uAsp<1.;
+  vec2 C=port?vec2(.08,-.50):vec2(uAsp*.40,-.10);
+  float R=port?.42:.54;
+  vec2 d=(p-C)/R; float r2=dot(d,d);
+  vec3 L=normalize(vec3(-.80,.32,.40));
+  float a=uTime*.008+.6; float ca=cos(a), sa=sin(a);
+  if(r2<1.){
+    float z=sqrt(1.-r2); vec3 n=vec3(d,z);
+    vec3 q=vec3(ca*n.x+sa*n.z,n.y,-sa*n.x+ca*n.z);
+    vec3 Lo=vec3(ca*L.x+sa*L.z,L.y,-sa*L.x+ca*L.z);
+    float mare=smoothstep(.46,.62,fbmv(q*1.5+2.));
+    float alb=mix(.66,.36,mare)*(.9+.2*vnoise3(q*13.));
+    vec2 c1=crater(q,3.,1.,Lo), c2=crater(q,7.,7.,Lo), c3=crater(q,16.,13.,Lo);
+    vec2 b1=bigCrater(q,normalize(vec3(-.35,-.42,.84)),.10,Lo);
+    vec2 b2=bigCrater(q,normalize(vec3(.42,.38,.82)),.07,Lo);
+    float sh=c1.x+c2.x*.8+c3.x*.6+b1.x+b2.x;
+    alb+=c1.y+c2.y*.8+c3.y*.6+b1.y+b2.y;
+    float ndl=dot(n,L);
+    float lam=clamp(ndl+sh*.45,0.,1.);
+    lam=lam*(1.-.35*(1.-smoothstep(0.,.25,ndl)));
+    vec3 c=vec3(.96,.93,.87)*alb*lam*1.55;
+    c+=vec3(.05,.065,.09)*alb*.25*(1.-smoothstep(-.1,.2,ndl));
+    col=mix(col,c,1.-smoothstep(.986,1.,r2));
+  }
+  float r=sqrt(r2);
+  col+=vec3(.5,.55,.65)*exp(-max(r-1.,0.)*9.)*.08*step(1.,r2);
+  o=vec4(withText(col),1.);
+}`;
+
+// 夜景：三層深度嘅大廈，窗口會開關，有霧同一架閃燈飛機
+const BG_CITY = TEXT + STARS + `
+void main(){
+  vec2 p=camP(); float t=uTime;
+  vec3 col=mix(vec3(.16,.08,.16),vec3(.015,.022,.06),smoothstep(-.35,.45,p.y));
+  col+=starLayer(p,120.,21.,.985)*.35*smoothstep(0.,.4,p.y);
+  float cl=fbm(vec2(p.x*1.2+t*.006,p.y*4.));
+  col+=vec3(.20,.09,.14)*smoothstep(.5,.85,cl)*(1.-smoothstep(-.1,.45,p.y))*.6;
+  float fx0=uAsp*(-.62)+fract(t*.011)*uAsp*1.24;
+  vec2 ap=vec2(fx0,.30+.03*sin(t*.07));
+  float ad=length(p-ap);
+  float strobe=step(.93,fract(t*.75));
+  col+=vec3(1.)*exp(-ad*ad*9e4)*strobe*2.+vec3(1.,.25,.2)*exp(-dot(p-ap-vec2(-.006,0.),p-ap-vec2(-.006,0.))*1.2e5)*.9;
+  col+=vec3(1.)*exp(-ad*60.)*strobe*.12;
+  for(int i=0;i<3;i++){
+    float fi=float(i); float k=fi/2.;
+    float sc=mix(24.,8.,k);
+    float x=p.x*(1.+.03*fi*uCam)*sc+fi*17.3;
+    float id=floor(x), fx=fract(x);
+    float hb=hash12(vec2(id,fi));
+    float top=-.03-fi*.10+hb*(.16-fi*.02)+step(.92,hb)*.10;
+    float gap=.05+.10*hash12(vec2(id,fi+5.));
+    float hb2=hash12(vec2(id,fi+9.));
+    float tw=top+step(.55,hb2)*.035;
+    bool inB=(fx>gap&&fx<1.-gap&&p.y<top)||(hb2>.55&&fx>.3&&fx<.7&&p.y<tw);
+    if(inB){
+      vec3 bc=mix(vec3(.05,.05,.09),vec3(.012,.012,.025),k);
+      float lx=(fx-gap)/max(1.-2.*gap,.01);
+      float cols=3.+floor(hash12(vec2(id,fi+2.))*4.);
+      vec2 wg=vec2(lx*cols,p.y*sc*2.6);
+      vec2 wid=floor(wg), wf=fract(wg);
+      float win=step(.22,wf.x)*step(wf.x,.78)*step(.28,wf.y)*step(wf.y,.72)*step(p.y,tw-.012);
+      float hw=hash12(wid+vec2(id*13.1,fi*71.));
+      float on=step(.56,hash12(wid+vec2(id,fi)+floor(t*.06+hw*9.)));
+      float tv=hw>.97?.75+.25*sin(t*7.+hw*40.):1.;
+      vec3 wc=mix(vec3(1.,.76,.42),vec3(.72,.84,1.),step(.7,hash12(wid+vec2(3.,id))));
+      bc+=wc*win*on*tv*mix(.55,.75,k);
+      bc=mix(bc,vec3(.16,.09,.16),(1.-k)*.45);
+      col=bc;
+    }
+    if(hb>.8){
+      vec2 lp=vec2((id+.5-fi*17.3)/sc/(1.+.03*fi*uCam),tw+.018);
+      float bl=.5+.5*sin(t*2.2+hb*30.);
+      vec2 dl=p-lp;
+      col+=vec3(1.,.15,.1)*exp(-dot(dl,dl)*2.5e4)*bl*mix(.5,1.,k);
+    }
+    col=mix(col,vec3(.22,.12,.18),exp(-(p.y+.5)*5.)*.10);
+  }
+  o=vec4(withText(col),1.);
+}`;
+
+// 海：黃昏、5 條 wave 計法線、太陽反光路、地平線霧
+const BG_OCEAN = TEXT + `
+vec3 oSky(vec3 rd,vec3 sd){
+  float y=max(rd.y,0.);
+  vec3 c=mix(vec3(1.,.60,.30),vec3(.36,.20,.34),smoothstep(0.,.10,y));
+  c=mix(c,vec3(.05,.06,.16),smoothstep(.06,.45,y));
+  float s=max(dot(rd,sd),0.);
+  c+=vec3(1.,.50,.22)*pow(s,10.)*.45+vec3(1.,.78,.48)*pow(s,90.)*.8;
+  return c;
+}
+void main(){
+  vec2 p=camP(); float t=uTime;
+  float hz=-.20;
+  vec3 ro=vec3(0.,1.2+.03*sin(t*.35),0.);
+  vec3 rd=normalize(vec3(p.x,p.y-hz,1.6));
+  vec3 sd=normalize(vec3(uAsp>=1.?.30:.05,.05,1.));
+  vec3 col;
+  vec3 haze=vec3(1.,.66,.40);
+  if(rd.y>0.){
+    col=oSky(rd,sd);
+    float s=dot(rd,sd);
+    col+=vec3(1.,.88,.66)*smoothstep(.99955,.99975,s)*1.6;
+    float cl=fbm(vec2(rd.x*3./max(rd.y+.05,.05)*.3+t*.004,rd.y*14.));
+    col=mix(col,col*.75+vec3(.30,.10,.12),smoothstep(.55,.78,cl)*smoothstep(.02,.10,rd.y)*.5);
+    col=mix(col,haze,exp(-rd.y*60.)*.6);
+  } else {
+    float tt=ro.y/max(-rd.y,1e-3);
+    vec3 pos=ro+rd*tt;
+    vec2 x=pos.xz;
+    float fade=1./(1.+tt*.04);
+    vec2 g=vec2(0.);
+    for(int i=0;i<5;i++){
+      float fi=float(i);
+      float a=fi*1.37+.3;
+      vec2 dir=vec2(sin(a),cos(a));
+      float k=.6*pow(1.75,fi);
+      float amp=.10/k;
+      g+=dir*k*amp*cos(dot(dir,x)*k+t*sqrt(9.8*k)*.45+fi*2.1);
+    }
+    float e=.05;
+    float n0=vnoise(x*1.7+t*.3);
+    g+=vec2(vnoise(x*1.7+vec2(e,0.)+t*.3)-n0,vnoise(x*1.7+vec2(0.,e)+t*.3)-n0)/e*.05;
+    g*=fade;
+    vec3 n=normalize(vec3(-g.x,1.,-g.y));
+    vec3 r=reflect(rd,n); r.y=abs(r.y);
+    float fr=.02+.98*pow(1.-max(dot(n,-rd),0.),5.);
+    vec3 water=vec3(.015,.05,.07)+vec3(.04,.10,.10)*clamp(g.x*2.+.3,0.,1.);
+    col=mix(water,oSky(r,sd),fr);
+    float sp=mix(500.,35.,clamp(tt/50.,0.,1.));
+    col+=vec3(1.,.78,.5)*pow(max(dot(r,sd),0.),sp)*mix(5.,1.4,clamp(tt/50.,0.,1.));
+    col=mix(col,haze*.95,exp(rd.y*30.)*.85);
+  }
+  col=col/(1.+col*.15);
+  o=vec4(withText(col),1.);
+}`;
+
+// 沙丘：迎光面同背光面、風紋、地平線熱浪
+const BG_DUNES = TEXT + `
+void main(){
+  vec2 p=camP(); float t=uTime;
+  float hz=-.02;
+  float sh=exp(-abs(p.y-hz)*26.);
+  p.x+=.0025*sh*sin(p.y*240.+t*3.1);
+  p.y+=.0018*sh*sin(p.x*90.+t*2.3);
+  vec3 col=mix(vec3(.99,.91,.78),vec3(.60,.73,.88),smoothstep(hz,.55,p.y));
+  vec2 sun=vec2(-uAsp*.30,.42);
+  col+=vec3(1.,.95,.8)*exp(-length(p-sun)*3.)*.25;
+  col=mix(col,vec3(.97,.88,.74),sh*.5);
+  float aa=1.5/uRes.y;
+  for(int i=0;i<4;i++){
+    float fi=float(i); float k=fi/3.;
+    float base=hz-.015-k*.20;
+    float amp=.035+k*.10;
+    float f=2.4-k*1.5;
+    float u=p.x*f+fi*3.7+.4*vnoise(vec2(p.x*f*.6,fi))+t*.002*(1.+fi);
+    float fr=fract(u); float kk=.68;
+    float c=fr<kk?fr/kk:(1.-fr)/(1.-kk);
+    c=c*c*(3.-2.*c);
+    float y0=base+amp*c+amp*.3*(vnoise(vec2(u*.5,fi+9.))-.5);
+    float m=1.-smoothstep(y0-aa,y0+aa,p.y);
+    float dep=max(y0-p.y,0.);
+    float dsh=.2*(1.-exp(-dep*f*(.9+.6*vnoise(vec2(u*.7,fi+4.)))*5.));
+    float lit=clamp(1.-smoothstep(kk-.012,kk+.05+dep*f*1.4,fr-dsh)+smoothstep(.80,1.,fr),0.,1.);
+    float ramp=.5-.5*cos(6.2831853*fr);
+    vec3 sand=mix(vec3(.74,.52,.38),vec3(.99,.86,.66),lit*(.80+.20*ramp));
+    sand+=vec3(.06,.04,.02)*exp(-abs(fr-kk)*60.)*lit*exp(-dep*25.);
+    float below=clamp((y0-p.y)/(amp+.08),0.,1.);
+    sand*=1.-.10*below;
+    float rp=sin(((y0-p.y)*95.+vnoise(p*vec2(9.,22.)+fi)*7.)*(1.+k*.6));
+    sand*=1.+rp*.035*k*mix(1.,.6,lit);
+    sand=mix(sand,vec3(.97,.88,.76),(1.-k)*.42);
+    col=mix(col,sand,m);
+  }
+  o=vec4(withText(col),1.);
+}`;
+
+// 雲海：fbm 平面向太陽計亮邊，近鏡雲絲 infinite zoom 向前飛
+const BG_CLOUDS = TEXT + `
+void main(){
+  vec2 p=camP(); float t=uTime;
+  float hz=.08;
+  vec3 rd=normalize(vec3(p.x,p.y-hz,1.4));
+  vec3 sd=normalize(vec3(.55,.22,1.));
+  vec3 hzC=vec3(.88,.91,.95);
+  vec3 col=mix(hzC,vec3(.45,.63,.88),smoothstep(0.,.5,rd.y));
+  float s=max(dot(rd,sd),0.);
+  col+=vec3(1.,.93,.78)*(pow(s,12.)*.35+pow(s,200.)*.8);
+  if(rd.y<0.){
+    float tt=1./max(-rd.y,1e-3);
+    vec2 pos=rd.xz*tt+vec2(0.,t*.22);
+    vec2 q=pos*.2;
+    float d=fbm(q);
+    float d2=fbm(q+sd.xz*.10);
+    float dens=smoothstep(.34,.66,d);
+    float light=clamp((d-d2)*5.+.55,0.,1.);
+    vec3 cc=mix(vec3(.62,.68,.80),vec3(1.,.985,.96),light);
+    vec3 under=vec3(.70,.78,.90);
+    vec3 c=mix(under,cc,dens);
+    col=mix(c,hzC,1.-exp(-tt*.05));
+  }
+  for(int j=0;j<2;j++){
+    float fj=float(j);
+    float z=fract(t*.025+fj*.5);
+    vec2 w=p*mix(3.2,.7,z)+vec2(fj*7.1,fj*3.3);
+    float wisp=smoothstep(.52,.82,fbm(w))*sin(PI*z);
+    col=mix(col,vec3(1.,.99,.97),wisp*.42);
+  }
+  o=vec4(withText(col),1.);
+}`;
+
+// Synthwave：條紋太陽、山、向你衝嚟嘅 grid、bloom
+const BG_SYNTHWAVE = TEXT + STARS + `
+void main(){
+  vec2 p=camP(); float t=uTime;
+  float hz=-.10;
+  vec3 col=mix(vec3(.95,.30,.45),vec3(.24,.05,.30),smoothstep(hz,hz+.25,p.y));
+  col=mix(col,vec3(.03,.012,.08),smoothstep(hz+.15,.5,p.y));
+  col+=starLayer(p,90.,4.,.975)*.6*smoothstep(.0,.3,p.y);
+  vec2 sc=vec2(uAsp>=1.?uAsp*.22:0.,hz+.20);
+  float R=.24;
+  float sd=length(p-sc);
+  float yy=(p.y-sc.y)/R;
+  float st=fract(yy*7.+t*.12);
+  float gw=clamp(-yy*.55+.04,0.,.6);
+  float w=1.5*7./(R*uRes.y);
+  float stripe=yy>0.?1.:smoothstep(gw-w,gw+w,st);
+  vec3 sunC=mix(vec3(1.,.86,.30),vec3(1.,.22,.55),1.-smoothstep(-.8,.6,yy));
+  float sunM=(1.-smoothstep(R-.003,R+.003,sd))*stripe;
+  col+=vec3(1.,.30,.55)*exp(-max(sd-R,0.)*5.)*.40;
+  col=mix(col,sunC,sunM);
+  float mh=hz+.012+.17*pow(fbm(vec2(p.x*1.9+3.,1.)),1.7)+.02*vnoise(vec2(p.x*14.,2.));
+  if(p.y<mh&&p.y>=hz){
+    col=vec3(.07,.02,.12)+vec3(.25,.05,.30)*exp(-(mh-p.y)*25.);
+    col+=vec3(1.,.35,.85)*exp(-(mh-p.y)*400.)*.7;
+  }
+  float dy=max(hz-p.y,1e-3);
+  float z=.22/dy;
+  vec2 g=vec2(p.x*z,z+t*.6);
+  vec2 fw=fwidth(g);
+  vec2 ld=.5-abs(fract(g)-.5);
+  vec2 ln=1.-smoothstep(vec2(0.),fw*1.5+1e-4,ld);
+  float fade=1.-smoothstep(.12,.6,max(fw.x,fw.y));
+  float line=max(ln.x,ln.y)*fade;
+  float bloom=max(exp(-ld.x/max(fw.x*7.,1e-3)),exp(-ld.y/max(fw.y*7.,1e-3)))*fade;
+  if(p.y<hz){
+    col=vec3(.03,.008,.06)+vec3(.35,.06,.25)*exp(-dy*9.);
+    col+=vec3(1.,.25,.85)*(line*1.1+bloom*.22);
+  }
+  col+=vec3(1.,.4,.7)*exp(-abs(p.y-hz)*70.)*.55;
+  col=col/(1.+col*.2);
+  o=vec4(withText(col),1.);
+}`;
+
+// 雲石：兩層 domain warp，三隻 accent 色慢慢流
+const BG_MARBLE = TEXT + `
+void main(){
+  vec2 p=camP()*1.5; float t=uTime*.025;
+  vec2 q=vec2(fbm(p+vec2(0.,t)),fbm(p+vec2(5.2,1.3)-t*.7));
+  vec2 r=vec2(fbm(p+3.4*q+vec2(1.7,9.2)+t*.5),fbm(p+3.4*q+vec2(8.3,2.8)-t*.4));
+  float f=fbm(p+3.4*r);
+  vec3 col=vec3(.022,.026,.055);
+  col=mix(col,vec3(.08,.42,.50)*.75,smoothstep(.35,.85,f));
+  col=mix(col,uAccent*.75,smoothstep(.45,1.1,length(q))*.55);
+  col=mix(col,vec3(.62,.22,.45)*.8,smoothstep(.55,.95,r.y)*.5);
+  float v=abs(fract(f*6.)-.5);
+  col+=vec3(.95,.88,.78)*(1.-smoothstep(0.,.05,v))*.16*smoothstep(.3,.7,f);
+  col*=.80+.35*f;
+  o=vec4(withText(col),1.);
+}`;
+
+// CRT terminal：自己 composite 文字（輕微 curvature、scanline、phosphor glow、flicker）
+const BG_TERMINAL = `
+uniform sampler2D tText;
+void main(){
+  vec2 c=vUv*2.-1.;
+  vec2 cc=c*(1.+vec2(.035,.05)*(c.yx*c.yx));
+  vec2 suv=cc*.5+.5;
+  float inside=(1.-smoothstep(.985,1.,abs(cc.x)))*(1.-smoothstep(.985,1.,abs(cc.y)));
+  float t=uTime;
+  vec3 bg=vec3(.010,.030,.016);
+  float rows=46.;
+  float row=floor(suv.y*rows), fy=fract(suv.y*rows);
+  float sr=row+floor(t*.6);
+  float len=hash12(vec2(sr,3.));
+  float ind=floor(hash12(vec2(sr,8.))*4.)*.012;
+  float gx=suv.x*uAsp*70.;
+  float gid=floor(gx), gf=fract(gx);
+  float x0=uAsp>=1.?.60:.08;
+  float on=step(.3,hash12(vec2(gid,sr)))*step(x0+ind,suv.x)*step(suv.x,x0+ind+.05+len*.33)*step(.25,len);
+  float glyph=on*step(.15,gf)*step(gf,.8)*step(.25,fy)*step(fy,.75);
+  bg+=vec3(.25,1.,.45)*glyph*.075;
+  float roll=fract(suv.y*.6-t*.05);
+  bg+=vec3(.03,.09,.05)*exp(-roll*9.);
+  bg+=vec3(.02,.06,.03)*(1.-dot(c,c)*.5);
+  vec4 tx=texture(tText,suv);
+  vec2 px=vec2(3.,3.)/uRes;
+  float gl=(textureLod(tText,suv+vec2(px.x,0.),0.).a+textureLod(tText,suv-vec2(px.x,0.),0.).a+textureLod(tText,suv+vec2(0.,px.y),0.).a+textureLod(tText,suv-vec2(0.,px.y),0.).a)*.25;
+  vec3 col=bg*(1.-tx.a)+tx.rgb*vec3(.86,1.,.90);
+  col+=vec3(.25,1.,.5)*gl*.16;
+  float sl=.80+.20*sin(suv.y*uRes.y*1.5708);
+  col*=mix(1.,sl,.6);
+  col*=.985+.015*sin(t*47.);
+  col*=1.-.32*dot(c,c)*.5;
+  col*=inside;
+  o=vec4(post(col),1.);
+}`;
+
+// Bokeh：三層深度嘅失焦光球慢慢飄
+const BG_BOKEH = TEXT + `
+vec3 orbs(vec2 p,float sc,float seed,float soft,float br){
+  vec3 acc=vec3(0.);
+  float t=uTime;
+  vec2 g=p*sc+vec2(t*.010*sc,-t*.016*sc);
+  vec2 id=floor(g), f=fract(g);
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){
+    vec2 o2=vec2(float(i),float(j)); vec2 cid=id+o2;
+    float h=hash12(cid+seed);
+    if(h<.45) continue;
+    vec2 pos=o2+.5+(vec2(hash12(cid+seed+1.3),hash12(cid+seed+7.7))-.5)*.7+.12*vec2(sin(t*.3+h*30.),cos(t*.23+h*20.));
+    float r=.22+.36*hash12(cid+seed+3.1);
+    float d=length(f-pos);
+    float disc=1.-smoothstep(r*(1.-soft),r,d);
+    float rr=(d-r*.88)/(r*.08+1e-3);
+    float ring=exp(-rr*rr)*disc;
+    float hc=hash12(cid+seed+5.5);
+    vec3 c=hc<.3?vec3(1.,.72,.38):hc<.55?vec3(1.,.42,.58):hc<.8?vec3(.40,.78,1.):uAccent;
+    float tw=.75+.25*sin(t*.4+h*50.);
+    acc+=c*(disc*(.6+.4*smoothstep(0.,r,d))+ring*.35)*br*tw;
+  }
+  return acc;
+}
+void main(){
+  vec2 p=camP();
+  vec3 col=mix(vec3(.05,.025,.07),vec3(.012,.012,.035),vUv.y);
+  col+=vec3(.10,.04,.06)*exp(-length(p-vec2(.3,-.4))*2.);
+  col+=orbs(p,7.,1.,.35,.16);
+  col+=orbs(p,4.,9.,.25,.24);
+  col+=orbs(p*1.03+vec2(.2,0.),2.2,17.,.55,.20);
+  col=col/(1.+col*.55);
   o=vec4(withText(col),1.);
 }`;
 
 const TR_FADE = `
 uniform sampler2D tA,tB;
-void main(){ vec3 a=texture(tA,vUv).rgb, b=texture(tB,vUv).rgb; o=vec4(mix(a,b,smoothstep(0.,1.,uP)),1.); }`;
+void main(){ vec3 a=texture(tA,vUv).rgb, b=texture(tB,vUv).rgb;
+  vec3 c=mix(a,b,smoothstep(0.,1.,uP));
+  c*=1.+.10*uP*(1.-uP);
+  o=vec4(c,1.); }`;
 
-// 燒穿：noise 決定每粒 pixel 幾時變，邊緣發光
+// 燒穿：noise 決定每粒 pixel 幾時變，邊緣發光，有火星
 const TR_DISSOLVE = `
 uniform sampler2D tA,tB;
 void main(){
@@ -292,6 +840,9 @@ void main(){
   float glow=exp(-abs(d)*55.)*live;
   vec3 gc=mix(vec3(1.,.38,.08),vec3(1.,.86,.55),exp(-abs(d)*140.));
   c+=gc*glow*1.05;
+  vec2 sg=floor(q*vec2(90.,90.)+vec2(0.,uTime*30.));
+  float spark=step(.985,hash12(sg))*exp(-abs(d-.02)*40.)*live;
+  c+=vec3(1.,.7,.35)*spark*.8;
   o=vec4(c,1.);
 }`;
 
@@ -308,14 +859,15 @@ void main(){
   float lp=clamp((uP-s)/.35,0.,1.);
   if(lp<=0.){ o=vec4(textureLod(tA,vUv,0.).rgb,1.); return; }
   if(lp>=1.){ o=vec4(textureLod(tB,vUv,0.).rgb,1.); return; }
-  float th=easeIO(lp)*3.14159265;
+  float th=easeIO(lp)*PI;
   float cs=cos(th), sn=sin(th);
   float c=f.y-.5;
   float ly=c/max(abs(cs),.001);
   bool back=th>1.5707963;
   float w=1.+.28*sn*(back?-1.:1.)*(ly*2.);
   float lx=(f.x-.5)/max(w,.05);
-  vec3 col=vec3(.02,.022,.03);
+  vec3 col=mix(textureLod(tA,vUv,0.).rgb,textureLod(tB,vUv,0.).rgb,lp)*.12;
+  col*=1.-.6*sn*(1.-smoothstep(0.,.5,abs(c)));
   if(abs(ly)<=.5&&abs(lx)<=.5){
     vec2 tuv=(id+vec2(lx,ly)+.5)/grid;
     vec3 face=back?textureLod(tB,tuv,0.).rgb:textureLod(tA,tuv,0.).rgb;
@@ -356,7 +908,7 @@ void main(){
     float ca=.006*(1.-sy);
     vec3 s=sampleRGB(first,src,ca);
     float gain=1.+2.2*pow(1.-sy,4.);
-    float scan=.9+.1*sin(vUv.y*uRes.y*3.14159);
+    float scan=.9+.1*sin(vUv.y*uRes.y*PI);
     col=s*gain*mix(1.,scan,1.-sy);
   }
   float hot=pow(1.-sy,3.);
@@ -387,8 +939,210 @@ void main(){
   float inside=(1.-smoothstep(R-.004,R+.004,r))*smoothstep(0.,.02,uP);
   vec3 col=mix(a,b,inside);
   float dr=(r-R)*45.;
-  float ring=exp(-dr*dr)*sin(3.14159*clamp(uP,0.,1.));
-  col+=mix(uAccent,vec3(1.),.45)*ring*.9;
+  float ring=exp(-dr*dr)*sin(PI*clamp(uP,0.,1.));
+  vec3 rc=mix(uAccent,vec3(1.),.45);
+  col+=rc*ring*.9+uAccent*exp(-abs(r-R)*12.)*.12*sin(PI*clamp(uP,0.,1.));
+  o=vec4(col,1.);
+}`;
+
+// 摺紙：右半頁沿中間摺痕摺過去（見到紙背纖維），再成疊向左邊翻走；B 上面有投影
+const TR_FOLD = `
+uniform sampler2D tA,tB;
+vec3 paperBack(vec2 q){
+  float f=fbm(q*vec2(14.,10.));
+  float fib=smoothstep(.70,.95,vnoise(vec2(q.x*260.+f*8.,q.y*22.)));
+  float fib2=smoothstep(.75,.97,vnoise(vec2(q.y*240.+f*6.,q.x*18.)));
+  return vec3(.94,.92,.88)*(1.+(f-.5)*.08)-fib*.05-fib2*.035;
+}
+void main(){
+  float D=2.6;
+  vec2 q=(vUv-.5)*vec2(uAsp,1.);
+  float hw=uAsp*.5;
+  float p1=easeIO(clamp(uP/.58,0.,1.));
+  float p2=easeIO(clamp((uP-.58)/.42,0.,1.));
+  vec3 A=textureLod(tA,vUv,0.).rgb;
+  vec3 B=textureLod(tB,vUv,0.).rgb;
+  vec3 col;
+  if(p2<=0.){
+    float th=p1*PI; float cs=cos(th), sn=sin(th);
+    float xe=hw*cs*D/max(D-hw*sn,.1);
+    if(q.x<0.){
+      col=A;
+      if(cs<0.) col*=1.-.45*sn*exp(-max(xe-q.x,0.)/(.04+.3*sn));
+    } else {
+      col=B*(1.-.55*sn*exp(-max(q.x-max(xe,0.),0.)/(.04+.3*sn)));
+    }
+    float den=D*cs+q.x*sn;
+    if(abs(den)>1e-4){
+      float s=q.x*D/den;
+      float sc=(D-s*sn)/D;
+      float ys=q.y*sc;
+      if(s>=0.&&s<=hw&&abs(ys)<=.5&&sc>0.){
+        vec3 fc;
+        if(cs>=0.){ fc=textureLod(tA,vec2(s/uAsp+.5,ys+.5),0.).rgb*(.55+.45*cs); }
+        else { fc=paperBack(vec2(s,ys))*(.6-.4*cs); }
+        fc+=vec3(1.,.98,.94)*exp(-s*90.)*.30*sn;
+        fc*=1.-.18*sn*smoothstep(0.,hw,s)*step(0.,cs);
+        col=fc;
+      }
+    }
+  } else {
+    float ph=p2*1.62; float cs=cos(ph), sn=sin(ph);
+    float L=-hw;
+    float Xr=L+hw*cs, Zr=hw*sn;
+    float xr=Xr*D/max(D-Zr,.1);
+    col=B*(1.-.5*sin(PI*p2)*exp(-max(q.x-xr,0.)/(.05+.3*sn)));
+    float den=D*cs+q.x*sn;
+    if(den>1e-4){
+      float u=D*(q.x-L)/den;
+      float sc=(D-u*sn)/D;
+      float ys=q.y*sc;
+      if(u>=0.&&u<=hw&&abs(ys)<=.5&&sc>0.){
+        float x0=L+u;
+        vec3 fc=paperBack(vec2(-x0,ys))*(.6+.4*cs);
+        fc+=vec3(1.,.98,.94)*exp(x0*90.)*.30*sn;
+        col=fc;
+      }
+    }
+  }
+  o=vec4(col,1.);
+}`;
+
+// 水浪：波前掃過，前面折射 A、後面折射 B；泡沫、水珠、caustic 高光
+const TR_WASH = `
+uniform sampler2D tA,tB;
+void main(){
+  vec2 q=vUv*vec2(uAsp,1.);
+  float env=smoothstep(0.,.06,uP)*(1.-smoothstep(.94,1.,uP));
+  float e=easeIO(uP);
+  float t=uTime;
+  float front=-.3+e*(uAsp+.6);
+  float wob=.05*sin(q.y*7.+t*2.)+.035*sin(q.y*17.-t*3.1)+(fbm3(vec2(q.y*3.,t*.4))-.5)*.12;
+  float x=q.x-(front+wob-.12*(q.y-.5));
+  float ax=abs(x);
+  float rip=sin(x*70.-t*9.)*exp(-ax*9.);
+  vec2 da=vec2(rip*.010,cos(q.y*40.+x*50.-t*6.)*.005*exp(-ax*7.))*env*step(0.,x);
+  float behind=exp(min(x,0.)*5.);
+  vec2 db=vec2(sin(q.y*30.+x*40.+t*4.)*.012,cos(q.x*26.-t*3.)*.008)*behind*env*(1.-step(0.,x));
+  vec3 a=textureLod(tA,vUv+da,0.).rgb;
+  vec3 b=textureLod(tB,vUv+db,0.).rgb;
+  b=mix(b,b*vec3(.80,.95,1.05)+vec3(.0,.03,.05),behind*env*.6*(1.-step(0.,x)));
+  vec3 col=mix(b,a,smoothstep(-.004,.004,x));
+  float caus=pow(1.-abs(2.*vnoise(q*14.+vec2(t*.6,-t*.4))-1.),6.);
+  col+=vec3(.75,.95,1.)*caus*.35*exp(min(x,0.)*7.)*(1.-step(0.,x))*env;
+  float foam=smoothstep(.42,.72,fbm(q*vec2(18.,26.)+vec2(-t*.8,t*.3)));
+  float fb=exp(-abs(x+.015)*38.);
+  col=mix(col,vec3(.95,.98,1.),clamp(foam*fb*1.4+exp(-ax*160.)*.5,0.,1.)*env);
+  vec2 g=q*28.; vec2 id=floor(g), f=fract(g);
+  float h=hash12(id);
+  vec2 c=.5+(vec2(hash12(id+3.1),hash12(id+7.3))-.5)*.5;
+  float r=.16+.22*hash12(id+5.7);
+  vec2 dv=f-c; float d=length(dv);
+  float pres=step(.80+x*1.4,h)*step(0.,x)*step(x,.22);
+  float dm=(1.-smoothstep(r*.82,r,d))*pres*env;
+  vec3 dc=textureLod(tA,vUv-dv*.06,0.).rgb*.8+vec3(.08,.12,.15);
+  dc+=vec3(1.)*exp(-dot(dv+vec2(r*.35,-r*.35),dv+vec2(r*.35,-r*.35))/(r*r*.04+1e-4))*.8;
+  col=mix(col,dc,dm);
+  o=vec4(col,1.);
+}`;
+
+// 蓋印：B 由大跌落嚟（overshoot 1.06 → 1.0），鏡頭震，網點油墨慢慢散開；A 撞擊時變暗
+const TR_SLAM = `
+uniform sampler2D tA,tB;
+void main(){
+  float tI=.42;
+  float a=clamp(uP/tI,0.,1.);
+  float fall=a*a*a;
+  float hit=step(tI,uP);
+  float tau=clamp((uP-tI)/(1.-tI),0.,1.);
+  float s=hit<.5?mix(1.9,1.06,fall):1.+.06*exp(-5.*tau)*cos(13.*tau)*(1.-tau);
+  float alpha=smoothstep(0.,.9,a);
+  float sk=hit*exp(-7.*tau)*(1.-tau);
+  vec2 shake=vec2(sin(tau*83.),cos(tau*67.))*.012*sk;
+  vec2 c=vUv-.5+shake;
+  vec3 B=vec3(0.);
+  float blur=(1.-hit)*(1.-fall)*.05;
+  for(int i=0;i<3;i++){ float fi=float(i); B+=textureLod(tB,.5+c/(s*(1.+blur*fi)),0.).rgb; }
+  B/=3.;
+  vec3 A=textureLod(tA,vUv+shake*.5,0.).rgb;
+  A*=1.-.6*smoothstep(0.,1.,a);
+  float settle=hit*smoothstep(0.,.85,tau);
+  float lum=dot(B,vec3(.299,.587,.114));
+  vec2 hp=rot(.785)*(vUv*uRes)/7.;
+  float hd=length(fract(hp)-.5);
+  float rad=sqrt(clamp(1.-lum,0.,1.))*.62+.25*tau;
+  float dotm=1.-smoothstep(rad-.08,rad+.08,hd);
+  vec3 ht=mix(B*1.12+.04,B*.62,dotm);
+  ht*=.93+.14*fbm3(vUv*vec2(uAsp,1.)*40.);
+  vec3 col=mix(A,mix(ht,B,settle),alpha);
+  col+=vec3(.10)*hit*exp(-tau*12.)*(1.-tau);
+  o=vec4(col,1.);
+}`;
+
+// 撕紙：A 沿鋸齒 noise 邊撕開兩塊（白色纖維邊 + 投影），轉住飛走，露出 B
+const TR_TEAR = `
+uniform sampler2D tA,tB;
+float edgeX(float y){ return (fbm(vec2(y*3.,7.))-.5)*.22+(vnoise(vec2(y*38.,3.))-.5)*.035+(hash12(vec2(floor(y*160.),1.))-.5)*.008; }
+vec2 toLocal(vec2 s,float th,vec2 P,vec2 T){ return rot(-th)*(s-P-T)+P; }
+void main(){
+  vec2 q=(vUv-.5)*vec2(uAsp,1.);
+  float hw=uAsp*.5;
+  float op=easeIO(clamp(uP/.3,0.,1.));
+  float fl=easeIO(clamp((uP-.18)/.82,0.,1.));
+  vec2 P=vec2(edgeX(-.5),-.5);
+  float thL=.07*op+.30*fl, thR=-(.06*op+.26*fl);
+  vec2 TL=vec2(-(hw+.75)*fl,-.06*fl), TR2=vec2((hw+.75)*fl,-.10*fl);
+  vec2 lL=toLocal(q,thL,P,TL), lR=toLocal(q,thR,P,TR2);
+  float eL=lL.x-edgeX(lL.y), eR=lR.x-edgeX(lR.y);
+  float inL=step(abs(lL.x),hw)*step(abs(lL.y),.5)*(1.-step(0.,eL));
+  float inR=step(abs(lR.x),hw)*step(abs(lR.y),.5)*step(0.,eR);
+  vec2 so=vec2(.018,-.024)*op;
+  vec2 sL=toLocal(q-so,thL,P,TL), sR=toLocal(q-so,thR,P,TR2);
+  float w=.03;
+  float shL=(1.-smoothstep(-w,w,abs(sL.x)-hw))*(1.-smoothstep(-w,w,abs(sL.y)-.5))*(1.-smoothstep(-w,w,sL.x-edgeX(sL.y)));
+  float shR=(1.-smoothstep(-w,w,abs(sR.x)-hw))*(1.-smoothstep(-w,w,abs(sR.y)-.5))*smoothstep(-w,w,sR.x-edgeX(sR.y));
+  vec3 col=textureLod(tB,vUv,0.).rgb*(1.-.5*clamp(shL+shR,0.,1.)*op);
+  float wb=(.004+.012*vnoise(vec2(lR.y*90.,1.)))*op;
+  vec3 pc=vec3(.96,.95,.92)*(.92+.08*vnoise(vec2(lR.y*400.,lR.x*40.)));
+  vec3 cR=textureLod(tA,lR/vec2(uAsp,1.)+.5,0.).rgb*(1.-.06*fl);
+  cR=mix(cR,pc,step(eR,wb));
+  col=mix(col,cR,inR);
+  float wbL=(.004+.012*vnoise(vec2(lL.y*90.,2.)))*op;
+  vec3 pcL=vec3(.96,.95,.92)*(.92+.08*vnoise(vec2(lL.y*400.,lL.x*40.)));
+  vec3 cL=textureLod(tA,lL/vec2(uAsp,1.)+.5,0.).rgb*(1.-.04*fl);
+  cL=mix(cL,pcL,step(-wbL,eL)*step(.0001,wbL));
+  col=mix(col,cL,inL);
+  o=vec4(col,1.);
+}`;
+
+// Glitch：block 錯位、RGB split、scanline jitter、量化 noise band，中途切去 B
+const TR_GLITCH = `
+uniform sampler2D tA,tB;
+vec3 smp(bool useB,vec2 uv,float ca){
+  uv=clamp(uv,0.,1.);
+  if(useB) return vec3(textureLod(tB,uv+vec2(ca,0.),0.).r,textureLod(tB,uv,0.).g,textureLod(tB,uv-vec2(ca,0.),0.).b);
+  return vec3(textureLod(tA,uv+vec2(ca,0.),0.).r,textureLod(tA,uv,0.).g,textureLod(tA,uv-vec2(ca,0.),0.).b);
+}
+void main(){
+  float I=1.-abs(2.*uP-1.); I=I*I*(3.-2.*I);
+  bool useB=uP>=.5;
+  float seed=floor(uTime*14.)+floor(uP*24.)*7.;
+  vec2 uv=vUv;
+  float band=floor(uv.y*mix(8.,40.,hash12(vec2(seed,1.))));
+  float hb=hash12(vec2(band,seed));
+  float shift=(hb-.5)*.25*I*step(1.-.55*I,hash12(vec2(band,seed+3.)));
+  vec2 bid=floor(uv*vec2(10.,16.));
+  float bh=hash12(bid+seed*1.3);
+  vec2 boff=(vec2(hash12(bid+seed+5.),hash12(bid+seed+9.))-.5)*.12*I*step(1.-.25*I,bh);
+  float jit=sin(uv.y*uRes.y*.7+uTime*60.)*.0025*I;
+  uv.x+=shift+jit; uv+=boff;
+  vec3 col=smp(useB,uv,.012*I*(.5+hb));
+  float nb=step(1.-.18*I,hash12(vec2(floor(vUv.y*60.),seed+11.)));
+  float nz=hash12(floor(vUv*uRes/vec2(6.,2.))+seed);
+  col=mix(col,vec3(nz)*vec3(.8,1.,.9),nb*.7);
+  float lv=mix(64.,5.,I);
+  col=mix(col,floor(col*lv+.5)/lv,step(.15,I));
+  col*=1.-.25*I*step(.5,fract(vUv.y*uRes.y*.5));
   o=vec4(col,1.);
 }`;
 
@@ -466,16 +1220,16 @@ function drawSlide(g, s, step, anim, W, H) {
   g.clearRect(0, 0, W, H);
   const portrait = W < H * 0.95;
   const S = portrait ? W / 1000 : Math.min(W / 1920, H / 1080);
-  const dark = s.bg !== 'paper';
+  const dark = has(DARK, s.bg) ? DARK[s.bg] : true;
   const ink = dark ? '#f3f6fb' : '#17171c';
-  const soft = dark ? 'rgba(222,229,242,0.84)' : 'rgba(40,40,48,0.78)';
+  const soft = dark ? 'rgba(226,232,244,0.88)' : 'rgba(34,32,40,0.84)';
   const mx = (portrait ? 70 : 150) * S;
   const maxW = W - mx * 2 - (portrait ? 0 : 300 * S);
   let y = s.layout === 'hero' ? H * (portrait ? 0.24 : 0.28) : (portrait ? 160 : 140) * S;
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
   if (dark) { g.shadowColor = 'rgba(0,0,0,0.55)'; g.shadowBlur = 22 * S; g.shadowOffsetY = 2 * S; }
-  else { g.shadowColor = 'transparent'; g.shadowBlur = 0; g.shadowOffsetY = 0; }
+  else { g.shadowColor = 'rgba(255,252,246,0.7)'; g.shadowBlur = 16 * S; g.shadowOffsetY = 0; }
 
   if (s.kicker) {
     const ks = 26 * S;
@@ -522,7 +1276,7 @@ function drawSlide(g, s, step, anim, W, H) {
 
 // ---------- WebGL2 ----------
 let gl = null, PROG = null, fboA = null, fboB = null, ctx2d = null;
-const UNIFORMS = ['uTime', 'uAsp', 'uP', 'uRes', 'uAccent', 'tText', 'tA', 'tB'];
+const UNIFORMS = ['uTime', 'uAsp', 'uP', 'uRes', 'uAccent', 'uCam', 'uDark', 'tText', 'tA', 'tB'];
 
 function compile(type, src) {
   const sh = gl.createShader(type);
@@ -546,8 +1300,15 @@ function buildPrograms() {
   const vs = compile(gl.VERTEX_SHADER, VS);
   const mk = body => link(vs, compile(gl.FRAGMENT_SHADER, HEAD + body));
   return {
-    bg: { space: mk(BG_SPACE), aurora: mk(BG_AURORA), paper: mk(BG_PAPER) },
-    tr: { fade: mk(TR_FADE), dissolve: mk(TR_DISSOLVE), flaps: mk(TR_FLAPS), line: mk(TR_LINE), portal: mk(TR_PORTAL) }
+    bg: {
+      space: mk(BG_SPACE), aurora: mk(BG_AURORA), paper: mk(BG_PAPER), mountains: mk(BG_MOUNTAINS), moon: mk(BG_MOON),
+      city: mk(BG_CITY), ocean: mk(BG_OCEAN), dunes: mk(BG_DUNES), clouds: mk(BG_CLOUDS), synthwave: mk(BG_SYNTHWAVE),
+      marble: mk(BG_MARBLE), terminal: mk(BG_TERMINAL), bokeh: mk(BG_BOKEH)
+    },
+    tr: {
+      fade: mk(TR_FADE), dissolve: mk(TR_DISSOLVE), flaps: mk(TR_FLAPS), line: mk(TR_LINE), portal: mk(TR_PORTAL),
+      fold: mk(TR_FOLD), wash: mk(TR_WASH), slam: mk(TR_SLAM), tear: mk(TR_TEAR), glitch: mk(TR_GLITCH)
+    }
   };
 }
 function texParams() {
@@ -612,7 +1373,7 @@ function textTexture(idx, step, anim) {
   return slot.tex;
 }
 
-function renderSlideGL(target, idx, step, anim, t) {
+function renderSlideGL(target, idx, step, anim, t, cam) {
   const s = SLIDES[idx];
   const pr = has(PROG.bg, s.bg) ? PROG.bg[s.bg] : PROG.bg.space;
   gl.activeTexture(gl.TEXTURE0);
@@ -624,6 +1385,8 @@ function renderSlideGL(target, idx, step, anim, t) {
   gl.uniform1f(pr.u.uAsp, W / H);
   gl.uniform2f(pr.u.uRes, W, H);
   gl.uniform3fv(pr.u.uAccent, s.rgb);
+  gl.uniform1f(pr.u.uCam, cam === undefined ? camTarget(idx, step) : cam);
+  gl.uniform1f(pr.u.uDark, (has(DARK, s.bg) ? DARK[s.bg] : true) ? 1 : 0);
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.uniform1i(pr.u.tText, 0);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -645,7 +1408,10 @@ function drawTransitionGL(name, p, t, rgb) {
 }
 
 // 2D 後備：純色背景 + 文字
-const BG2D = { space: '#060912', aurora: '#071422', paper: '#ece7de' };
+const BG2D = {
+  space: '#060912', aurora: '#071422', paper: '#ece7de', mountains: '#2a2238', moon: '#05070d', city: '#0a0814',
+  ocean: '#2a1c2a', dunes: '#e9d2ae', clouds: '#c9d8ec', synthwave: '#160626', marble: '#0a0d1a', terminal: '#03100a', bokeh: '#0b0716'
+};
 function renderSlide2D(idx, step, anim, alpha) {
   drawSlide(tctx, SLIDES[idx], step, anim, W, H);
   ctx2d.globalAlpha = alpha;
@@ -657,11 +1423,25 @@ function renderSlide2D(idx, step, anim, alpha) {
 
 // ---------- 尺寸 ----------
 let W = 0, H = 0;
+// 慢機自動降解像度：連續約 2 秒低過 40 fps，內部解像度降 15%（最低 55%）。?q=1 鎖死解像度（測試用）
+const Q_LOCK = QS.has('q') ? Math.min(1, Math.max(0.55, parseFloat(QS.get('q')) || 1)) : 0;
+let quality = Q_LOCK || 1, slowT = 0, coolT = 0;
+function adapt(dt) {
+  if (Q_LOCK || !(dt > 0) || dt > 0.25) return; // 背景 tab 或者卡一下：唔計
+  coolT = Math.max(0, coolT - dt);
+  slowT = dt > 1 / 40 ? slowT + dt : Math.max(0, slowT - dt);
+  if (slowT > 2 && coolT === 0 && quality > 0.56) {
+    quality = Math.max(0.55, quality * 0.85);
+    slowT = 0; coolT = 3;
+    resize();
+  }
+}
 function resize() {
   const cw = Math.max(1, canvas.clientWidth || innerWidth), ch = Math.max(1, canvas.clientHeight || innerHeight);
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
   const MAX_PIX = 3.2e6; // 限制像素，慳 GPU
   if (cw * ch * dpr * dpr > MAX_PIX) dpr = Math.sqrt(MAX_PIX / (cw * ch));
+  dpr *= quality;
   const w = Math.max(1, Math.round(cw * dpr)), h = Math.max(1, Math.round(ch * dpr));
   if (w === W && h === H) return;
   W = w; H = h;
@@ -694,8 +1474,63 @@ function setHash() {
 function afterChange() { setHash(); updateUI(); }
 function now() { return performance.now() / 1000; }
 
+// 鏡頭：每多一個 step 就推近少少（reduced motion 就唔郁）
+const camTarget = (i, step) => { const m = maxStep(SLIDES[i]); return (REDUCED || !m) ? 0 : step / m; };
+let camS = 0, lastT = 0;
+// ---------- 聲效（預設關，M 開關）：WebAudio 即場合成，冇任何音檔 ----------
+const sound = {
+  on: false, ac: null, noise: null,
+  init() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    if (!this.ac) {
+      this.ac = new AC();
+      const len = this.ac.sampleRate * 2, buf = this.ac.createBuffer(1, len, this.ac.sampleRate), d = buf.getChannelData(0);
+      let s = 12345;
+      for (let k = 0; k < len; k++) { s = (Math.imul(s, 1103515245) + 12345) & 0x7fffffff; d[k] = s / 0x3fffffff - 1; }
+      this.noise = buf;
+    }
+    if (this.ac.state === 'suspended') this.ac.resume();
+    return true;
+  },
+  toggle() { this.on = !this.on && this.init(); return this.on; },
+  play(name, dur) {
+    const ac = this.ac; if (!ac) return;
+    const t0 = ac.currentTime, out = ac.createGain();
+    out.gain.value = 0.32; out.connect(ac.destination);
+    const whoosh = (len, f0, f1, q, peak) => {
+      const src = ac.createBufferSource(); src.buffer = this.noise;
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = q;
+      bp.frequency.setValueAtTime(f0, t0); bp.frequency.exponentialRampToValueAtTime(f1, t0 + len);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + len * 0.45); g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
+      src.connect(bp); bp.connect(g); g.connect(out); src.start(t0); src.stop(t0 + len + 0.05);
+    };
+    const thump = (at, f0, peak) => {
+      const os = ac.createOscillator(), g = ac.createGain();
+      os.type = 'sine'; os.frequency.setValueAtTime(f0, t0 + at); os.frequency.exponentialRampToValueAtTime(38, t0 + at + 0.35);
+      g.gain.setValueAtTime(0.0001, t0 + at); g.gain.exponentialRampToValueAtTime(peak, t0 + at + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + 0.45);
+      os.connect(g); g.connect(out); os.start(t0 + at); os.stop(t0 + at + 0.5);
+    };
+    const L = Math.min(dur, 1.6);
+    if (name === 'slam') { whoosh(dur * 0.42, 300, 1800, 0.8, 0.5); thump(dur * 0.42, 140, 1); }
+    else if (name === 'glitch') { for (let k = 0; k < 5; k++) whoosh(0.06, 2000 + k * 900, 3000 + k * 500, 6, 0.5); }
+    else if (name === 'wash') whoosh(L, 400, 2400, 0.6, 0.6);
+    else if (name === 'tear') whoosh(L * 0.6, 1400, 5200, 1.4, 0.55);
+    else if (name === 'line') { whoosh(L * 0.5, 4000, 300, 2, 0.4); thump(L * 0.5, 90, 0.4); }
+    else whoosh(L, 600, 1600, 0.9, 0.45);
+  }
+};
+function showToast(msg) {
+  toastEl.textContent = msg; toastEl.hidden = false; toastEl.style.opacity = '1';
+  clearTimeout(showToast.t1); clearTimeout(showToast.t2);
+  showToast.t1 = setTimeout(() => { toastEl.style.opacity = '0'; }, 1600);
+  showToast.t2 = setTimeout(() => { toastEl.hidden = true; }, 2200);
+}
+
 function finish() {
   const tr = state.tr; if (!tr) return;
+  camS = camTarget(tr.to, tr.toStep);
   state.i = tr.to; state.step = tr.toStep; state.tr = null; state.revealT0 = -1;
   afterChange();
 }
@@ -709,6 +1544,7 @@ function go(to, toStep, name, reverse) {
   }
   let nm = has(TR, name) ? name : 'fade';
   if (REDUCED || !gl) nm = 'fade';
+  if (sound.on && !REDUCED) sound.play(nm, TR[nm].dur);
   state.tr = { from: state.i, fromStep: state.step, to, toStep, name: nm, t0: now(), dur: REDUCED ? 0.45 : TR[nm].dur, reverse: !!reverse };
   afterChange();
 }
@@ -739,7 +1575,9 @@ function frame(ms) {
   raf = requestAnimationFrame(frame);
   resize();
   const t = ms / 1000;
+  const tPrev = lastT; lastT = t;
   if (FREEZE) { renderFrozen(); return; }
+  adapt(t - tPrev);
   if (state.tr && t - state.tr.t0 >= state.tr.dur) finish();
   const q = state.tr;
   if (q) {
@@ -756,7 +1594,9 @@ function frame(ms) {
     }
   } else {
     const anim = state.revealT0 < 0 ? 1 : clamp01((t - state.revealT0) / 0.45);
-    if (gl) renderSlideGL(null, state.i, state.step, anim, t);
+    const dt = Math.min(0.1, Math.max(0, t - tPrev));
+    camS += (camTarget(state.i, state.step) - camS) * (1 - Math.exp(-dt * 2.2));
+    if (gl) renderSlideGL(null, state.i, state.step, anim, t, camS);
     else renderSlide2D(state.i, state.step, anim, 1);
   }
 }
@@ -790,6 +1630,7 @@ addEventListener('keydown', e => {
   else if (k === 'n' || k === 'N') togglePanel(notesEl);
   else if (k === 'o' || k === 'O') { togglePanel(overEl); if (!overEl.hidden) { const b = overEl.querySelector('button[aria-current="true"]'); if (b) b.focus(); } }
   else if (k === 'f' || k === 'F') fullscreen();
+  else if (k === 'm' || k === 'M') showToast(sound.toggle() ? '聲效：開' : '聲效：關');
   else if (k === '?' || k === 'h' || k === 'H') togglePanel(helpEl);
   else if (k === 'Escape') { closePanels(); canvas.focus(); }
 });
@@ -833,13 +1674,16 @@ setTimeout(() => { toastEl.hidden = true; }, 4300);
 // ---------- 開始 ----------
 const start = parseHash();
 if (start) { state.i = start.i; state.step = start.step; }
+camS = camTarget(state.i, state.step);
 resize();
 updateUI();
 if (!FREEZE) setHash();
 canvas.focus({ preventScroll: true });
 raf = requestAnimationFrame(frame);
 
-window.deck = { next, prev, go: (i, s) => go(i, s || 0, 'fade', i < state.i), state, slides: SLIDES };
+window.deck = { next, prev, go: (i, s) => go(i, s || 0, 'fade', i < state.i), state, slides: SLIDES,
+  scenes: Object.keys(DARK), transitions: Object.keys(TR), renderer: gl ? 'webgl2' : '2d', sound,
+  get quality() { return quality; } };
 })();
 </script>
 </body>

@@ -1,0 +1,7 @@
+node_modules/
+# tests/shots.mjs 產生嘅單張截圖（contact sheet 照 commit）
+docs/screens/slides/
+docs/screens/phone/
+docs/screens/transitions/
+docs/screens/contact-phone.jpg
+docs/screens/index.json

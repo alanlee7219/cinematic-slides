@@ -1,0 +1,15 @@
+{
+  "name": "cinematic-slides",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Single-file WebGL2 presentation engine with procedural GLSL scenes and shader transitions.",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/wrap.test.mjs && node tests/shots.mjs",
+    "test:wrap": "node tests/wrap.test.mjs",
+    "shots": "node tests/shots.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

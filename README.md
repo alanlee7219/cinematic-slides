@@ -1,79 +1,120 @@
-# 告別悶 Slide · cinematic-slides
+# Cinematic Slides v2
 
-單一個 `index.html` 嘅 WebGL2 簡報 demo：用 shader 即時畫背景（星空同地球、極光、紙紋），有 5 款電影感轉場。冇外部 library，唔使 build，離線都開到。
+一個 file 搞掂嘅 WebGL2 presentation engine：每頁一個 full-screen procedural GLSL scene，上面一層 Canvas 2D 畫嘅清晰文字，頁同頁之間用 shader transition 接駁。冇 library、冇 build step、冇 CDN、冇外部字型 / 圖片 / 音檔，`index.html`（約 74 KB）雙擊就開得，丟上 GitHub Pages 就有網址。
+
+![Slides contact sheet](docs/screens/contact-slides.jpg)
 
 ## 點開
-1. **本機**：下載 `index.html`，用 Chrome、Edge、Firefox 或者 Safari 15+ 打開。
-2. **GitHub Pages**：
-   1. 入 repo 嘅 Settings → Pages。
-   2. Source 揀 `Deploy from a branch`。
-   3. Branch 揀 `main`，folder 揀 `/ (root)`，然後撳 Save。
-   4. 等 1–2 分鐘，再開 `https://alanlee7219.github.io/cinematic-slides/`。
 
-   注意：private repo 要 GitHub Pro 或者 Team 先開到 Pages。用免費 plan 嘅話，要先將 repo 轉做 public。
+- 直接用 Chrome / Safari / Firefox 開 `index.html`，或者開 GitHub Pages。
+- 要 WebGL2。冇 WebGL2、或者任何 shader compile / link 失敗，就自動轉 2D fallback（純色背景 + 同一套文字 + fade）。
 
 ## 操作
-| 按鍵 | 功能 |
-|---|---|
-| → / Space / Enter / PageDown，或者撳畫面右邊 | 下一步 |
-| ← / Backspace / PageUp，或者撳畫面左邊 | 上一步 |
-| Home / End | 跳去第一頁／最後一頁 |
-| N | Speaker notes |
-| O | Overview（揀頁跳過去） |
-| F | 全屏 |
-| ? 或者 H | Help |
-| Esc | 閂晒啲 panel |
-| 手機左右 swipe | 換頁 |
 
-網址會記住你去到邊度，例如 `#how-2` 即係 `how` 呢頁嘅第 2 步。
+| 鍵 | 功能 |
+| --- | --- |
+| → / Space / Enter / PageDown | 下一步（先逐點 reveal bullet，再換頁） |
+| ← / Backspace / PageUp | 上一步（換頁時 transition 倒帶播） |
+| Home / End | 第一頁 / 最後一頁 |
+| N | Speaker notes |
+| O | Overview（全部頁面） |
+| F | 全屏 |
+| M | 轉場聲效（WebAudio 即場合成，預設關） |
+| ? / H | Help |
+| Esc | 關閉 panel |
+| 手機 | 撳右邊 = 下一步、撳左邊 = 上一步；左右 swipe 換頁 |
+
+網址 hash 係 `#slide-id-step`（例如 `#formula-2`），refresh 都會留喺同一步。Console 有 `window.deck`：`deck.next()`、`deck.prev()`、`deck.go(3, 1)`、`deck.state`、`deck.scenes`、`deck.transitions`、`deck.renderer`。
+
+`prefers-reduced-motion` 開咗嘅話：所有 transition 變 0.45 s fade，鏡頭唔會推。
+
+慢機會自動降解像度：連續約 2 秒低過 40 fps，內部解像度就降 15%（最低 55%）。網址加 `?q=1` 會鎖死全解像度（截圖、測試用）。
+
+## 13 個 scene（`bg`）
+
+| 名 | 內容 | 文字 |
+| --- | --- | --- |
+| `space` | 星空 + 自轉地球、雲層、夜面城市燈光 | 淺色 |
+| `aurora` | 極光簾、山影、湖面倒影 | 淺色 |
+| `paper` | 米白紙、纖維、grain、慢慢移動嘅光 | 深色 |
+| `mountains` | 日出、6 層 ridgeline、大氣透視、山谷霧、parallax | 淺色 |
+| `moon` | 大月球：隕石坑 rim、ejecta rays、terminator 側光、星空 | 淺色 |
+| `city` | 3 層深度夜景、窗口開關閃、霧、閃燈飛機橫過 | 淺色 |
+| `ocean` | 黃昏海面、多層 wave、太陽反光路、地平線霧、swell | 淺色 |
+| `dunes` | 沙丘迎光 / 背光面、風紋、地平線熱浪 | 深色 |
+| `clouds` | 雲海上面向前飛、向陽亮邊、近鏡雲絲 | 深色 |
+| `synthwave` | 條紋太陽、山影、向你捲嚟嘅 grid、bloom | 淺色 |
+| `marble` | Domain-warped 墨水雲石，3 隻 accent 色慢慢流 | 淺色 |
+| `terminal` | CRT：barrel curvature、scanline、phosphor glow、flicker | 淺色（綠） |
+| `bokeh` | 幾層深度嘅失焦光球慢慢飄 | 淺色 |
+
+深 / 淺由 `DARK` map 決定：深 scene 用淺字 + 柔陰影，淺 scene 用深字 + 白色 halo；shader 亦會喺文字區加一層 scrim，保證對比。
+
+## 10 個 transition（`tr`）
+
+| 名 | 長度 | 效果 |
+| --- | --- | --- |
+| `fade` | 1.1 s | 柔和交叉淡入 |
+| `dissolve` | 1.6 s | Noise 燒穿，邊緣發光 + 火星 |
+| `flaps` | 1.9 s | 一格格 tile 斜斜咁翻牌 |
+| `line` | 1.3 s | 舊 CRT 熄機：壓成線、縮成點、再拉開 |
+| `portal` | 1.5 s | 中間開光圈，A 推向鏡頭 |
+| `fold` | 2.1 s | 沿摺痕摺紙：透視、摺痕高光、紙背纖維、投影落 B |
+| `wash` | 1.8 s | 水浪掃過：前面折射 A、後面折射 B，泡沫、水珠、caustic |
+| `slam` | 1.4 s | 蓋印：B 由大跌落（overshoot 1.06 → 1.0）、鏡頭震、網點油墨慢慢散 |
+| `tear` | 2.0 s | 沿鋸齒邊撕開兩塊，白色纖維邊 + 投影，轉住飛走 |
+| `glitch` | 1.1 s | Block 錯位、RGB split、scanline jitter、量化 noise band，中途切 B |
+
+全部 transition 喺 `p ∈ [0,1]` 都啱，倒帶（A/B 對調、`p = 1 − p`）一樣睇得。
 
 ## 改內容
-全部內容都喺 `index.html` 頂部嘅 `SLIDES` array。每一頁係一個 object：
 
-| Field | 用途 |
-|---|---|
-| `id` | 網址用嘅名，例如 `#intro` |
-| `layout` | `hero`（大標題）或者 `list`（逐點出） |
-| `bg` | 背景：`space`、`aurora`、`paper` |
-| `tr` | 入呢一頁用邊款轉場：`fade`、`dissolve`、`flaps`、`line`、`portal` |
-| `accent` | 主色，例如 `'#7cc4ff'` |
-| `kicker`、`title` | 小標題、大標題 |
-| `sub` | 副題（`hero` 用） |
-| `body` | 重點 array（`list` 用）：每按一下出多一點 |
-| `notes` | Speaker notes |
+全部內容喺 `index.html` 最頂嘅 `SLIDES`：
 
-## `index.html` 入面有乜
-1. `SLIDES`：內容。
-2. `TR`：每款轉場行幾多秒。
-3. Shaders：`BG_*` 係背景，`TR_*` 係轉場。
-4. 文字：先用 Canvas 2D 畫字，再上載做 WebGL texture。
-5. Engine：分頁、步驟、hash routing、鍵盤、swipe、notes／overview／help。
-
-## 加一款轉場（大約 15–30 分鐘）
-1. 跟 `TR_FADE` 嘅格式寫一個 `TR_XXX`：開頭宣告 `uniform sampler2D tA,tB;`，讀 `tA`（舊頁）、`tB`（新頁）同 `uP`（progress，由 0 行到 1），結果寫入 `o`。
-2. 喺 `TR` 加 `xxx: { dur: 1.2 }`。
-3. 喺 `PROG.tr` 加 `xxx: mk(TR_XXX)`。
-4. 喺想用嘅頁設 `tr: 'xxx'`。
-5. 開 `index.html?tr=xxx&p=0.5&a=1&b=2` 預覽：畫面會停喺第 2 頁轉去第 3 頁嘅一半（`a`、`b` 由 0 數起）。
-
-## Fallback
-- 冇 WebGL2，或者 shader compile 失敗：自動轉用 2D 淡入淡出，內容照樣睇到。
-- 系統開咗「減少動態效果」（`prefers-reduced-motion`）：全部轉場變做 0.45 秒嘅 fade。
-- GPU context 甩咗：等佢恢復之後，頁面會自動重新載入。
-
-## 測試
+```js
+{ id: 'formula', layout: 'list', bg: 'ocean', tr: 'slam', accent: '#ffc46b',
+  kicker: 'Transition',
+  title: '兩張 texture 一條公式',
+  body: ['第一點', '第二點', '第三點'],   // 每點一個 step reveal
+  notes: 'Speaker notes（N 鍵）' }
 ```
-node tests/wrap.test.mjs
+
+- `layout: 'hero'` 用 `sub`（副標題），`'list'` 用 `body`（建議 3–5 點）。
+- `bg` 揀 scene，`tr` 係「由呢頁去下一頁」用嘅 transition。
+- `id` 用嚟做 hash，只可以用英文、數字、底線。
+- `DECK_TITLE` 係左下角嘅名。
+
+## 加一個 scene
+
+1. 寫 `const BG_FOO = TEXT + \`void main(){ vec2 p=camP(); vec3 col=…; o=vec4(withText(col),1.); }\`;`（要星就 `TEXT + STARS + …`）。
+2. 喺 `buildPrograms()` 嘅 `bg` 加 `foo: mk(BG_FOO)`。
+3. `DARK` 加 `foo: true/false`，`BG2D` 加 fallback 色，CSS 加 `#over .sw.foo` swatch。
+4. 喺 `SLIDES` 用 `bg: 'foo'`，跑 test。
+
+## 加一個 transition
+
+1. 寫 `const TR_BAR = \`uniform sampler2D tA,tB; void main(){ … o=vec4(col,1.); }\`;` — `uP=0` 要完全係 A，`uP=1` 要完全係 B。
+2. `TR` 加 `bar: { dur: 1.4 }`（1.1–2.2 s），`buildPrograms()` 嘅 `tr` 加 `bar: mk(TR_BAR)`。
+3. 用 `?tr=bar&p=0.5&a=1&b=2` 凍結預覽，逐個 `p` 睇。
+
+## GLSL 安全守則
+
+`smoothstep` 一定 `edge0 < edge1`（反方向就 `1.-smoothstep(a,b,x)`）；`pow()` 唔可以負 base；non-uniform branch 入面用 `textureLod(tex,uv,0.)`；loop 用常數上限（≤ 48）；`precision highp float`；每個除法都 guard；fbm ≤ 5 octave。
+
+## Test
+
+```sh
+npm install                 # 只係裝 Playwright（devDependency，runtime 唔使）
+npx playwright install chromium
+node tests/wrap.test.mjs    # CJK 斷行
+node tests/shots.mjs        # SwiftShader 截圖 + console / shader error + keyboard walk
+npm test                    # 兩樣一齊
 ```
-測文字換行：中英混排、標點唔做行頭、最後一行唔會淨低一兩隻字。要 Node 18+，唔使裝任何 package。
 
-## 原版點砌：The Last Boring Slide
-呢份 demo 參考咗 [The Last Boring Slide](https://claude.ai/artifact/Cy2d8Vn63CnzCtonA1LSah) 嘅做法：
-1. 單一個 HTML file：全屏 canvas，加一層 UI（notes、overview、help）。
-2. 13 個 scene，大多數用 shader 即時計：山脈、月球、地球、星空。
-3. 10 款 transition：摺紙、水浪、翻牌、印刷、撕紙、CRT 收線。
-4. Fonts 同圖片全部用 base64 塞入 file，所以離線都開到。
-5. 底層用 three.js，再加自己寫嘅 GLSL。
+`tests/shots.mjs` 會：每頁最後一步截 1280×720 同 390×844 @2x、每款 transition 截 `p = 0.25 / 0.5 / 0.75`、任何 console error / page error / shader 錯誤或者 fallback 就 fail、用鍵盤由頭行到尾再驗 hash。截圖同 contact sheet 喺 `docs/screens/`（`SHOTS=0` 就唔寫圖）。Linux 冇 CJK 字型嘅話先裝 `fonts-noto-cjk`，否則截圖會見到豆腐字。
 
-## 版權
-呢份係獨立重寫，冇用原版嘅 code、圖片或者字型。原版嘅版權屬於原作者。
+![Transitions contact sheet](docs/screens/contact-transitions.jpg)
+
+## 重用
+
+想整新 deck：參考 [`skill/SKILL.md`](skill/SKILL.md)，copy `index.html`，改 `SLIDES`，跑 test，deliver 一個 HTML file 或者 GitHub Pages。
